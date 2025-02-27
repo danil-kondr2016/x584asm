@@ -150,16 +150,15 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 int lexer_register(struct lexer *lexer, char *word, int32_t value)
 {
 	if (!lexer)
-		return 0;
+		return -1;
 	if (!word)
-		return 0;
+		return -1;
 	if (lexer->keywords_count >= N_KEYWORDS)
-		return 0;
+		return -1;
 
 	lexer->keywords[lexer->keywords_count].word = sdsnew(word);
 	lexer->keywords[lexer->keywords_count].value = value;
-	lexer->keywords_count++;
-	return 1;
+	return lexer->keywords_count++;
 }
 
 static void _skip_comment(struct lexer *lexer);
