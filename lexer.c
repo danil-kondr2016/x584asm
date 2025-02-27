@@ -225,11 +225,11 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 				lexer->input = INPUT_NOT_SAVED;
 				return _hex(lexer, token);
 			}
-			else if (x >= '0' && x <= '9') {
+			else if (lexer->input >= '0' && lexer->input <= '9') {
 				return _number0(lexer, token);
 			}
 			else {
-				*token = sdsnew("0", 1);
+				*token = sdsnew("0");
 				return RUNE_NUMBER;
 			}
 			break;
@@ -501,7 +501,7 @@ static int32_t _hex(struct lexer *lexer, sds *token)
 		return INPUT_ERROR;
 
 	token1 = *token;
-	token2 = sdsnew("0x", 2);
+	token2 = sdsnew("0x");
 	if (!token2) {
 		fprintf(stderr, "! Fatal error: out of memory\n");
 		exit(1);
@@ -511,6 +511,8 @@ static int32_t _hex(struct lexer *lexer, sds *token)
 		fprintf(stderr, "! Fatal error: out of memory\n");
 		exit(1);
 	}
+	sdsfree(token1);
+	*token = token2;
 
 	return RUNE_HEX;
 }
@@ -524,7 +526,7 @@ static int32_t _number0(struct lexer *lexer, sds *token)
 		return INPUT_ERROR;
 
 	token1 = *token;
-	token2 = sdsnew("0", 1);
+	token2 = sdsnew("0");
 	if (!token2) {
 		fprintf(stderr, "! Fatal error: out of memory\n");
 		exit(1);
@@ -534,6 +536,8 @@ static int32_t _number0(struct lexer *lexer, sds *token)
 		fprintf(stderr, "! Fatal error: out of memory\n");
 		exit(1);
 	}
+	sdsfree(token1);
+	*token = token2;
 
 	return RUNE_NUMBER;
 }
