@@ -5,8 +5,8 @@
 
 #include "reader.h"
 #include "sds.h"
+#include "x584err.h"
 
-#define INPUT_ERROR     ((int32_t)(-4))
 #define INPUT_NOT_SAVED ((int32_t)(-2))
 #define INPUT_EOF       ((int32_t)(-1))
 

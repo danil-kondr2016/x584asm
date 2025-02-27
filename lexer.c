@@ -5,20 +5,6 @@
 #include <string.h>
 #include <assert.h>
 
-static int32_t _error(struct lexer *lexer, char *title)
-{
-	fprintf(stderr, "! Line %d, column %d: Lexical error: %s\n", 
-		lexer->line, lexer->col, title);
-	return INPUT_ERROR;
-}
-
-static int32_t _error2(struct lexer *lexer, char *title, char *info)
-{
-	fprintf(stderr, "! Line %d, column %d: Lexical error: %s: %s\n", 
-		lexer->line, lexer->col, title, info);
-	return INPUT_ERROR;
-}
-
 static int _is_newline(int32_t codepoint)
 {
 	utf8proc_category_t category;
@@ -303,8 +289,7 @@ static int32_t _collect(struct lexer *lexer, sds *token, codepoint_cb cb)
 		count = utf8proc_encode_char(input, utf8);
 		tmp = sdscatlen(*token, utf8, count);
 		if (!tmp) {
-			fprintf(stderr, "! Fatal error: out of memory\n");
-			exit(1);
+			Die(X584ASM_FATAL_OUT_OF_MEMORY);
 		}
 		*token = tmp;
 	} 
@@ -402,18 +387,13 @@ static int32_t _string_cb(struct lexer *lexer, sds *token)
 		case 'u': return _unicode(lexer, token, 4);
 		case 'U': return _unicode(lexer, token, 8);
 		default:
-			  {
-				  char buf[16] = {0};
-				  buf[0] = '\\';
-				  utf8proc_encode_char(lexer->input, &buf[1]);
-				  return _error2(lexer, "Undefined escape sequence", buf);
-			  }
+			  return Error(lexer->line, lexer->col, X584ASM_INVALID_ESCAPE_SEQUENCE);
 		}
 		break;
 	case '"':
 		return INPUT_EOF;
 	case '\n':
-		return _error(lexer, "Premature end of line inside of string");
+		return Error(lexer->line, lexer->col, X584ASM_PREMATURE_END_OF_LINE);
 	default:
 		return result;
 	}	
@@ -422,19 +402,10 @@ static int32_t _string_cb(struct lexer *lexer, sds *token)
 static int32_t _unicode(struct lexer *lexer, sds *token, int n)
 {
 	int32_t result = 0;
-	char buf[256] = {0};
 	int32_t buf_pos;
-
-	buf_pos = 0;
-	buf_pos += utf8proc_encode_char('\\', &buf[buf_pos]);
-	if (n == 4)
-		buf_pos += utf8proc_encode_char('u', &buf[buf_pos]);
-	else if (n == 8)
-		buf_pos += utf8proc_encode_char('U', &buf[buf_pos]);
 
 	for (int i = 0; i < n; i++) {
 		_l_getc(lexer);
-		buf_pos += utf8proc_encode_char(lexer->input, &buf[buf_pos]);
 
 		result <<= 4;
 		switch (lexer->input) {
@@ -452,7 +423,7 @@ static int32_t _unicode(struct lexer *lexer, sds *token, int n)
 			result += (lexer->input) - 'a' + 10;
 			break;
 		default:
-			return _error2(lexer, "Invalid Unicode escape sequence", buf);
+			return Error(lexer->line, lexer->col, X584ASM_INVALID_ESCAPE_SEQUENCE);
 		}
 	}
 	return result;
@@ -503,13 +474,11 @@ static int32_t _hex(struct lexer *lexer, sds *token)
 	token1 = *token;
 	token2 = sdsnew("0x");
 	if (!token2) {
-		fprintf(stderr, "! Fatal error: out of memory\n");
-		exit(1);
+		Die(X584ASM_FATAL_OUT_OF_MEMORY);
 	}
 	token2 = sdscatsds(token2, token1);
 	if (!token2) {
-		fprintf(stderr, "! Fatal error: out of memory\n");
-		exit(1);
+		Die(X584ASM_FATAL_OUT_OF_MEMORY);
 	}
 	sdsfree(token1);
 	*token = token2;
@@ -528,13 +497,11 @@ static int32_t _number0(struct lexer *lexer, sds *token)
 	token1 = *token;
 	token2 = sdsnew("0");
 	if (!token2) {
-		fprintf(stderr, "! Fatal error: out of memory\n");
-		exit(1);
+		Die(X584ASM_FATAL_OUT_OF_MEMORY);
 	}
 	token2 = sdscatsds(token2, token1);
 	if (!token2) {
-		fprintf(stderr, "! Fatal error: out of memory\n");
-		exit(1);
+		Die(X584ASM_FATAL_OUT_OF_MEMORY);
 	}
 	sdsfree(token1);
 	*token = token2;
