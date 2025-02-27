@@ -6,7 +6,8 @@
 static const char *_errors[] = {
 	[X584ASM_FATAL_OUT_OF_MEMORY] = "Fatal error: out of memory",
 	[X584ASM_PREMATURE_END_OF_LINE] = "Premature end of line",
-	[X584ASM_INVALID_ESCAPE_SEQUENCE] = "Invalid escape sequence"};
+	[X584ASM_INVALID_ESCAPE_SEQUENCE] = "Invalid escape sequence"
+};
 
 
 int Error(int line, int col, int error)
