@@ -18,6 +18,7 @@
 #define RUNE_WORD   INT32_C(0xFDD1)
 #define RUNE_NUMBER INT32_C(0xFDD2)
 #define RUNE_STRING INT32_C(0xFDD3)
+#define RUNE_HEX    INT32_C(0xFDD4)
 
 #define KW_START INT32_C(0x00110000)
 enum keyword_type {

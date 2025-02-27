@@ -167,12 +167,16 @@ static void _skip_comment(struct lexer *lexer);
 typedef int32_t (*codepoint_cb)(struct lexer *lexer, sds *token);
 static int32_t _word_cb(struct lexer *lexer, sds *token);
 static int32_t _number_cb(struct lexer *lexer, sds *token);
+static int32_t _hex_cb(struct lexer *lexer, sds *token);
 static int32_t _string_cb(struct lexer *lexer, sds *token);
 
 static int32_t _collect(struct lexer *lexer, sds *token, codepoint_cb cb);
 static int32_t _word(struct lexer *lexer, sds *token);
 static int32_t _number(struct lexer *lexer, sds *token);
+static int32_t _number0(struct lexer *lexer, sds *token);
+static int32_t _hex(struct lexer *lexer, sds *token);
 static int32_t _string(struct lexer *lexer, sds *token);
+
 int32_t lexer_next(struct lexer *lexer, sds *token)
 {
 	int32_t result;
@@ -216,7 +220,21 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			break;
 		case '"':
 			return _string(lexer, token);
-		case '0': case '1': case '2': case '3': case '4':
+		case '0':
+			_l_getc(lexer);
+			if (lexer->input == 'x' || lexer->input == 'X') {
+				lexer->input = INPUT_NOT_SAVED;
+				return _hex(lexer, token);
+			}
+			else if (x >= '0' && x <= '9') {
+				return _number0(lexer, token);
+			}
+			else {
+				*token = sdsnew("0", 1);
+				return RUNE_NUMBER;
+			}
+			break;
+		case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
 			return _number(lexer, token);
 		case '\n':
@@ -340,6 +358,23 @@ static int32_t _number_cb(struct lexer *lexer, sds *token)
 	}
 }
 
+static int32_t _hex_cb(struct lexer *lexer, sds *token)
+{
+	if (lexer->input == INPUT_NOT_SAVED)
+		_l_getc(lexer);
+	if (lexer->input >= '0' && lexer->input <= '9'
+		|| lexer->input >= 'A' && lexer->input <= 'F'
+		|| lexer->input >= 'a' && lexer->input <= 'f')
+	{
+		int32_t result = lexer->input;
+		lexer->input = INPUT_NOT_SAVED;
+		return result;
+	}
+	else {
+		return INPUT_EOF;
+	}
+}
+
 static int32_t _unicode(struct lexer *lexer, sds *token, int n);
 static int32_t _string_cb(struct lexer *lexer, sds *token)
 {
@@ -455,6 +490,52 @@ static int32_t _number(struct lexer *lexer, sds *token)
 {
 	if (_collect(lexer, token, _number_cb) == INPUT_ERROR)
 		return INPUT_ERROR;
+	return RUNE_NUMBER;
+}
+
+static int32_t _hex(struct lexer *lexer, sds *token)
+{
+	sds token1;
+	sds token2;
+
+	if (_collect(lexer, token, _hex_cb) == INPUT_ERROR)
+		return INPUT_ERROR;
+
+	token1 = *token;
+	token2 = sdsnew("0x", 2);
+	if (!token2) {
+		fprintf(stderr, "! Fatal error: out of memory\n");
+		exit(1);
+	}
+	token2 = sdscatsds(token2, token1);
+	if (!token2) {
+		fprintf(stderr, "! Fatal error: out of memory\n");
+		exit(1);
+	}
+
+	return RUNE_HEX;
+}
+
+static int32_t _number0(struct lexer *lexer, sds *token)
+{
+	sds token1;
+	sds token2;
+
+	if (_collect(lexer, token, _number_cb) == INPUT_ERROR)
+		return INPUT_ERROR;
+
+	token1 = *token;
+	token2 = sdsnew("0", 1);
+	if (!token2) {
+		fprintf(stderr, "! Fatal error: out of memory\n");
+		exit(1);
+	}
+	token2 = sdscatsds(token2, token1);
+	if (!token2) {
+		fprintf(stderr, "! Fatal error: out of memory\n");
+		exit(1);
+	}
+
 	return RUNE_NUMBER;
 }
 
