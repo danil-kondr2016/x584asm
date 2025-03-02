@@ -328,6 +328,7 @@ static int32_t _word_cb(struct lexer *lexer, sds *token)
 	case UTF8PROC_CATEGORY_ND:
 	case UTF8PROC_CATEGORY_NL:
 	case UTF8PROC_CATEGORY_NO:
+	case UTF8PROC_CATEGORY_PC: // _
 		result = lexer->input;
 		lexer->input = INPUT_NOT_SAVED;
 		break;
