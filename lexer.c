@@ -229,6 +229,8 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 		case '5': case '6': case '7': case '8': case '9':
 			return _number(lexer, token);
 		case '\n':
+		case '\t':
+		case '\r':
 			lexer->input = INPUT_NOT_SAVED;
 			continue;
 		default:
