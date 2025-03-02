@@ -146,6 +146,7 @@ int lexer_register(struct lexer *lexer, char *word, int32_t value)
 	if (lexer->keywords_count >= N_KEYWORDS)
 		return -1;
 
+	printf("<L> Register %08X %s\n", value, word);
 	lexer->keywords[lexer->keywords_count].word = sdsnew(word);
 	lexer->keywords[lexer->keywords_count].value = value;
 	return lexer->keywords_count++;
@@ -220,6 +221,7 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			}
 			else {
 				*token = sdsnew("0");
+				printf("<L> %08X 0\n", RUNE_NUMBER);
 				return RUNE_NUMBER;
 			}
 			break;
@@ -250,6 +252,10 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			}
 		}
 	} while (!end);
+	printf("<L> %08X", result);
+	if (*token)
+		printf(" %s", *token);
+	printf("\n");
 	return result;
 }
 
@@ -449,6 +455,9 @@ static int32_t _word(struct lexer *lexer, sds *token)
 		norm_keyword = utf8proc_NFKC_Casefold(keyword);
 		if (strcmp(norm_token, norm_keyword) == 0) {
 			result = lexer->keywords[i].value;
+			// We don't need string token anymore
+			sdsfree(*token);
+			*token = NULL;
 			break;
 		}
 		free(norm_keyword);
@@ -457,13 +466,18 @@ static int32_t _word(struct lexer *lexer, sds *token)
 	if (norm_keyword)
 		free(norm_keyword);
 	free(norm_token);
+	printf("<L> %08X", result);
+	if (*token)
+		printf(" %s", *token);
+	printf("\n");
 	return result;
 }
 
 static int32_t _number(struct lexer *lexer, sds *token)
 {
 	if (_collect(lexer, token, _number_cb) == INPUT_ERROR)
-		return INPUT_ERROR;
+		return puts("<L> INPUT_ERROR"), INPUT_ERROR;
+	printf("<L> %08X %s\n", RUNE_NUMBER, *token);
 	return RUNE_NUMBER;
 }
 
@@ -473,7 +487,7 @@ static int32_t _hex(struct lexer *lexer, sds *token)
 	sds token2;
 
 	if (_collect(lexer, token, _hex_cb) == INPUT_ERROR)
-		return INPUT_ERROR;
+		return puts("<L> INPUT_ERROR"), INPUT_ERROR;
 
 	token1 = *token;
 	token2 = sdsnew("0x");
@@ -487,6 +501,7 @@ static int32_t _hex(struct lexer *lexer, sds *token)
 	sdsfree(token1);
 	*token = token2;
 
+	printf("<L> %08X %s\n", RUNE_HEX, *token);
 	return RUNE_HEX;
 }
 
@@ -496,7 +511,7 @@ static int32_t _number0(struct lexer *lexer, sds *token)
 	sds token2;
 
 	if (_collect(lexer, token, _number_cb) == INPUT_ERROR)
-		return INPUT_ERROR;
+		return puts("<L> INPUT_ERROR"), INPUT_ERROR;
 
 	token1 = *token;
 	token2 = sdsnew("0");
@@ -510,6 +525,7 @@ static int32_t _number0(struct lexer *lexer, sds *token)
 	sdsfree(token1);
 	*token = token2;
 
+	printf("<L> %08X %s\n", RUNE_NUMBER, *token);
 	return RUNE_NUMBER;
 }
 
@@ -517,7 +533,8 @@ static int32_t _string(struct lexer *lexer, sds *token)
 {
 	lexer->input = INPUT_NOT_SAVED;
 	if (_collect(lexer, token, _string_cb) == INPUT_ERROR)
-		return INPUT_ERROR;
+		return puts("<L> INPUT_ERROR"), INPUT_ERROR;
+	printf("<L> %08X %s\n", RUNE_STRING, *token);
 	return RUNE_STRING;
 }
 

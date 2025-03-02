@@ -14,6 +14,9 @@
 #define MAX_LABELS 1024
 #define RUNE_LABEL(n) ((int32_t)(INT32_C(0x00210000) | ((n & 0xFFFF))))
 
+#define IS_RUNE_LABEL(x) ((x & INT32_C(0xFFFF0000)) == INT32_C(0x00210000))
+#define LABEL_ID(x) ((x & 0xFFFF))
+
 #define RUNE_ASSIGN INT32_C(0xFDD0)
 #define RUNE_WORD   INT32_C(0xFDD1)
 #define RUNE_NUMBER INT32_C(0xFDD2)
