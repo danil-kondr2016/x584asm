@@ -196,6 +196,8 @@ static const struct opcode_data _opcodes[] = {
 	{ARG(ADD_WR) | ARG(ADD_REG) | ARG(ADD_C), VAR_WR_XWR, REG_R6, 0, 0, OP_SAR_X, 0, 0, 0566},
 	{ARG(ADD_WR) | ARG(ADD_REG) | ARG(ADD_C), VAR_WR_XWR, REG_R7, 0, 0, OP_SAR_X, 0, 0, 0567},
 	
+	{0, 0, 0, 0, 0, OP_NOP, 0, 0, NOP},
+	{0, 0, 0, 0, 0, OP_HALT, 0, 0, NOP},
 	{0, 0, 0, 0, 0, 0, 0, 0, 0},
 };
 

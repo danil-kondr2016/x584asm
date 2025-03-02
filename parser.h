@@ -139,6 +139,8 @@ enum op {
 	OP_SHL_X, OP_SHR_X,
 	OP_SAL_X, OP_SAR_X,
 	OP_ROL_X, OP_ROR_X,
+	OP_NOP,
+	OP_HALT,
 };
 
 struct parser {

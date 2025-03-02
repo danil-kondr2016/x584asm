@@ -599,11 +599,13 @@ static int Opcode(struct parser *parser)
 	}
 
 	if (Match(parser, KW_NOP)) {
+		parser->op = OP_NOP;
 		EmitOpcode(parser, NOP, brk, 0, 0);
 		puts("<< Opcode");
 		return 1;
 	}
 	else if (Match(parser, KW_HALT)) {
+		parser->op = OP_HALT;
 		EmitOpcode(parser, NOP, 1, 0, 0);
 		puts("<< Opcode");
 		return 1;
@@ -1244,11 +1246,14 @@ static int GenerateOpcode(struct parser *parser)
 
 	if (opcode == -1)
 		parser->invalid = 1;
+	if (parser->op == OP_HALT) {
+		parser->brk = 1;
+	}
 
 	if (parser->invalid) {
 		printf("@ Invalid opcode\n");
 		EmitOpcode(parser, NOP, 1, 0, 0);
-		EmitAnnotation(parser, "INVALID");
+		EmitAnnotation(parser, "<<INVALID>>");
 		return 0;
 	}
 	else {
