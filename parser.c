@@ -481,7 +481,6 @@ static int Term(struct parser *parser)
 		SeverePanic(parser, X584ASM_UNEXPECTED_SYMBOL);
 	}
 
-
 	puts("<<<<< Term");
 	return result;
 }
@@ -684,7 +683,6 @@ static int LogExpr(struct parser *parser)
 
 	term = Term(parser);
 	if (!term) {
-		SeverePanic(parser, X584ASM_TERM_EXPECTED);
 		return 0;
 	}
 	parser->arg1 = term;
