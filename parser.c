@@ -387,13 +387,12 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	case REG_1: flag = sub ? ARG_SUB_1 : ARG_ADD_1; id = 0; break;
 	case REG_0: flag = ARG_0; id = 0; break;
 	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; break;
-	case REG_INVALID: invalid = 1;
 	}
 
 	printf(": AddRegister: %d %d\n", id, flag);
-	if (parser->arg_add & (1 << flag) || invalid) {
+	if (parser->arg_add & (1 << flag) || id == REG_INVALID) {
 		if (!parser->invalid)
-			printf("[%s:%d] ", __FILE__, __LINE__), Error(parser->lexer->line, parser->lexer->col,
+			fprintf(stderr,"[%s:%d] ", __FILE__, __LINE__), Error(parser->lexer->line, parser->lexer->col,
 				X584ASM_INVALID_OPCODE);
 		parser->invalid = 1;
 	}
@@ -472,6 +471,7 @@ static int Term(struct parser *parser)
 		result = REG_INVALID;
 	}
 	else if (parser->input == RUNE_WORD) {
+		fprintf(stderr, "[%s:%d] ", __FILE__, __LINE__);
 		Error(parser->lexer->line, parser->lexer->col,
 				X584ASM_UNEXPECTED_WORD);
 		Consume(parser);
