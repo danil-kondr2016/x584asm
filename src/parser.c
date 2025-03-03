@@ -1026,7 +1026,7 @@ static int Input(struct parser *parser)
 	}
 	else if (Match(parser, '-')) {
 		if (parser->input == RUNE_NUMBER) {
-			input_num = strtol(parser->token, NULL, 16);
+			input_num = strtol(parser->token, NULL, 10);
 			if (input_num < 1 || input_num > 32768) {
 				Error(parser->lexer->line, parser->lexer->col,
 					X584ASM_INVALID_NUMBER);
