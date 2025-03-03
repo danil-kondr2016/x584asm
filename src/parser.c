@@ -338,7 +338,10 @@ static int Instruction(struct parser *parser)
 
 	if (!ret) {
 		parser->invalid = 1;
-		SeverePanic(parser, X584ASM_SYNTAX_ERROR);
+		if (!parser->error)
+			SeverePanic(parser, X584ASM_SYNTAX_ERROR);
+		else if (parser->error != X584ASM_INVALID_OPCODE)
+			SeverePanic(parser, parser->error);
 	}
 
 	if (parser->input == ';')
@@ -351,7 +354,7 @@ static int Instruction(struct parser *parser)
 
 static int AddRegister(struct parser *parser, uint8_t id, int sub)
 {
-	int flag = ARG_ADD_REG;
+	int flag = -1;
 	int invalid = 0;
 
 	switch (id) {
@@ -378,11 +381,15 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; break;
 	}
 
-	if (parser->arg_add & (1 << flag) || id == REG_INVALID) {
-		if (!parser->invalid)
+	if ((flag > -1) && parser->arg_add & (1 << flag)) {
+		if (!parser->invalid) 
 			Error(parser->lexer->line, parser->lexer->col,
 				X584ASM_INVALID_OPCODE);
 		parser->invalid = 1;
+	}
+	else if (id == REG_INVALID) {
+		parser->invalid = 1;
+		parser->error = X584ASM_INVALID_OPCODE;
 	}
 	else {
 		if (id != REG_WR && id != REG_XWR && id != REG_DIP && id)
