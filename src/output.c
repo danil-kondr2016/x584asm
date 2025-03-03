@@ -97,7 +97,7 @@ static void instruction_v1(struct program *program, int i, FILE *output)
 	len = transcode(str, buf, 128);
 	fputc(len, output);
 	if (len)
-		fwrite(str, 1, len, output);
+		fwrite(buf, 1, len, output);
 }
 
 static void magic_v2(FILE *output)
