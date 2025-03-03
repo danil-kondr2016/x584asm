@@ -156,6 +156,7 @@ struct parser {
 	uint8_t arg1, arg2;
 	uint8_t op;
 	uint8_t brk, carry, invalid;
+	uint8_t valid;
 };
 
 int parser_init(struct parser *parser, struct lexer *lexer, struct program *program);

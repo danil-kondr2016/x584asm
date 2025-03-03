@@ -1129,6 +1129,7 @@ static int GenerateOpcode(struct parser *parser)
 	if (parser->invalid) {
 		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
 		program_set_annotation(parser->program, parser->address, "<<INVALID>>");
+		parser->valid = 0;
 		return 0;
 	}
 	else {
@@ -1155,6 +1156,7 @@ int parser_init(struct parser *parser, struct lexer *lexer, struct program *prog
 		= INPUT_NOT_SAVED;
 	program_init(program);
 	parser->program = program;
+	parser->valid = 1;
 
 	return 1;
 }
@@ -1163,5 +1165,5 @@ int parser_run(struct parser *parser)
 {
 	Labels(parser);
 	while (parser->input >= 0 && Instruction(parser));
-	return 1;
+	return parser->valid;
 }
