@@ -1158,8 +1158,6 @@ static int GenerateOpcode(struct parser *parser)
 					opcode = _opcodes[i].opcode;
 					printf("@ Found 0%03o (C=1)\n", opcode);
 					parser->carry = CARRY_VALUE_1;
-					parser->carry = 1;
-					parser->carry_val = 1;
 					break;
 				}
 				tmp = _opcodes[i].arg_add & ~(ARG(ADD_C));
