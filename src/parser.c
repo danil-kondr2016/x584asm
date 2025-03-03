@@ -349,7 +349,7 @@ static int Instruction(struct parser *parser)
 
 	GenerateOpcode(parser);
 	parser->address++;
-	return ret;
+	return 1;
 }
 
 static int AddRegister(struct parser *parser, uint8_t id, int sub)
