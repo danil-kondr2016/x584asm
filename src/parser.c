@@ -114,7 +114,6 @@ static int Match(struct parser *parser, int32_t rune)
 	if (parser->input == INPUT_NOT_SAVED) {
 		Consume(parser);
 	}
-	printf("<M> %08X %08X\n", parser->input, rune);
 	if (parser->input == rune) {
 		Consume(parser);
 		return 1;
@@ -129,7 +128,6 @@ static int MatchLabel(struct parser *parser)
 	if (parser->input == INPUT_NOT_SAVED) {
 		Consume(parser);
 	}
-	printf("<M> %08X\n", parser->input);
 	if (IS_RUNE_LABEL(parser->input)) {
 		int label = parser->input;
 		Consume(parser);
@@ -189,7 +187,6 @@ static int Labels(struct parser *parser)
 {
 	int second = 0, end = 0, word = 0, result = 1;
 
-	puts("> Labels");
 	if (!Match(parser, KW_LABELS))
 		return 0;
 	do {
@@ -215,8 +212,6 @@ static int Labels(struct parser *parser)
 				continue;
 			}
 			else {
-				printf(">@ Label %s %08x\n", parser->token,
-						RUNE_LABEL(parser->n_labels));
 				lexer_register(parser->lexer, parser->token,
 						RUNE_LABEL(parser->n_labels));
 				parser->n_labels++;
@@ -247,7 +242,6 @@ static int Labels(struct parser *parser)
 		second = 1;
 	} while (!end);
 
-	puts("< Labels");
 	return result;
 }
 
@@ -264,14 +258,13 @@ static int Instruction(struct parser *parser)
 	parser->carry = CARRY_UNUSED;
 	parser->invalid = 0;
 
-	puts("> Instruction");
 	if (parser->input == INPUT_EOF) {
-		return puts("< (E)Instruction"), 0;
+		return 0;
 	}
 	if (parser->address >= N_INSTRUCTIONS) {
 		Error(parser->lexer->line, parser->lexer->col,
 			X584ASM_TOO_MANY_INSTRUCTIONS);
-		return puts("< -Instruction"), 0;
+		return 0;
 	}
 	Label(parser);
 
@@ -353,7 +346,7 @@ static int Instruction(struct parser *parser)
 
 	GenerateOpcode(parser);
 	parser->address++;
-	return puts(ret?"< +Instruction":"< -Instruction"), ret;
+	return ret;
 }
 
 static int AddRegister(struct parser *parser, uint8_t id, int sub)
@@ -385,10 +378,9 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; break;
 	}
 
-	printf(": AddRegister: %d %d\n", id, flag);
 	if (parser->arg_add & (1 << flag) || id == REG_INVALID) {
 		if (!parser->invalid)
-			fprintf(stderr,"[%s:%d] ", __FILE__, __LINE__), Error(parser->lexer->line, parser->lexer->col,
+			Error(parser->lexer->line, parser->lexer->col,
 				X584ASM_INVALID_OPCODE);
 		parser->invalid = 1;
 	}
@@ -405,7 +397,6 @@ static int Variable(struct parser *parser)
 {
 	int result = VAR_NONE;
 
-	puts(">>>> Variable");
 	if (Match(parser, KW_RF0)) { result = VAR_R0; }
 	else if (Match(parser, KW_RF1)) { result = VAR_R1; }
 	else if (Match(parser, KW_RF2)) { result = VAR_R2; }
@@ -420,7 +411,6 @@ static int Variable(struct parser *parser)
 	// else: token is already saved and ready to further processing
 	
 	parser->var = result;
-	puts("<<<< Variable");
 	return result;
 }
 
@@ -428,7 +418,6 @@ static int Term(struct parser *parser)
 {
 	int result = 0;
 
-	puts(">>>>> Term");
 	if (Match(parser, KW_RF0)) { result = REG_R0; }
 	else if (Match(parser, KW_RF1)) { result = REG_R1; }
 	else if (Match(parser, KW_RF2)) { result = REG_R2; }
@@ -442,9 +431,9 @@ static int Term(struct parser *parser)
 	else if (Match(parser, KW_DIP)) { result = REG_DIP; }
 	else if (Match(parser, KW_C)) { result = REG_C; }
 	else if (parser->input == RUNE_NUMBER && parser->token[0] == '1' && !parser->token[1])
-		{ puts("<M> RUNE_NUMBER(1)"); result = REG_1; Consume(parser); }
+		{ result = REG_1; Consume(parser); }
 	else if (parser->input == RUNE_NUMBER && parser->token[0] == '0' && !parser->token[1])
-		{ puts("<M> RUNE_NUMBER(0)"); result = REG_0; Consume(parser); }
+		{ result = REG_0; Consume(parser); }
 	else if (Match(parser, '!')) {
 		if (Match(parser, KW_RF0)) { result = REG_NR0; }
 		else if (Match(parser, KW_RF1)) { result = REG_NR1; }
@@ -467,7 +456,6 @@ static int Term(struct parser *parser)
 		result = REG_INVALID;
 	}
 	else if (parser->input == RUNE_WORD) {
-		fprintf(stderr, "[%s:%d] ", __FILE__, __LINE__);
 		Error(parser->lexer->line, parser->lexer->col,
 				X584ASM_UNEXPECTED_WORD);
 		Consume(parser);
@@ -477,27 +465,21 @@ static int Term(struct parser *parser)
 		SeverePanic(parser, X584ASM_UNEXPECTED_SYMBOL);
 	}
 
-	puts("<<<<< Term");
 	return result;
 }
 
 static int Assign(struct parser *parser)
 {
-	puts(">>> Assign");
 	if (!Variable(parser)) {
-		puts("<<< -Assign");
 		return 0;
 	}
 	if (!Match(parser, RUNE_ASSIGN)) {
-		puts("<<< -Assign");
 		return 0;
 	}
 	if (!Expr(parser)) {
-		puts("<<< -Assign");
 		return 0;
 	}
 
-	puts("<<< +Assign");
 	return 1;
 }
 
@@ -505,36 +487,29 @@ static int XAssign(struct parser *parser)
 {
 	int shift_op = 0;
 
-	puts(">>> XAssign");
 	if (!Match(parser, '(')) {
-		puts("<<< XAssign");
 		return 0; 
 	}
 	if (!Match(parser, KW_WR)) {
-		puts("<<< XAssign");
 		return 0;
 	}
 	if (!Match(parser, ',')) {
-		puts("<<< XAssign");
 		return 0;
 	}
 	if (!Match(parser, KW_XWR)) {
-		puts("<<< XAssign");
 		return 0;
 	}
 	if (!Match(parser, ')')) {
-		puts("<<< XAssign");
 		return 0;
 	}
 	if (!Match(parser, RUNE_ASSIGN)) {
-		puts("<<< XAssign");
 		return 0;
 	}
 
 	parser->var = VAR_WR_XWR;
 	shift_op = ShiftOp(parser);
 	if (!shift_op)
-		return puts("<<< XAssign"), 0;
+		return 0;
 	switch (shift_op) {
 	case OP_SHL: parser->op = OP_SHL_X; break;
 	case OP_SHR: parser->op = OP_SHR_X; break;
@@ -545,22 +520,21 @@ static int XAssign(struct parser *parser)
 	}
 	if (!Match(parser, '(')) {
 		parser->error = X584ASM_LPAR_EXPECTED;
-		return puts("<<< XAssign"), 0;
+		return 0;
 	}
 	if (!AddExpr(parser))
-		return puts("<<< XAssign"), 0;
+		return 0;
 	if (!Match(parser, ',')) {
 		parser->error = X584ASM_COMMA_EXPECTED;
-		return puts("<<< XAssign"), 0;
+		return 0;
 	}
 	if (!Match(parser, KW_XWR))
-		return puts("<<< XAssign"), 0;
+		return 0;
 	if (!Match(parser, ')')) {
 		parser->error = X584ASM_RPAR_EXPECTED;
-		return puts("<<< XAssign"), 0;
+		return 0;
 	}
 
-	puts("<<< XAssign");
 	return 1;
 }
 
@@ -568,18 +542,16 @@ static int Expr(struct parser *parser)
 {
 	int ret;
 
-	puts(">>>> Expr");
 	if (ret = AddExpr(parser)) {
 		parser->op = OP_ADD_SUB_NEG;
-		return puts("<<<< Expr"), ret;
+		return ret;
 	}
 	else if (ret = LogExpr(parser))
-		return puts("<<<< Expr"), ret;
+		return ret;
 	else if (ret = NXorExpr(parser))
-		return puts("<<<< Expr"), ret;
+		return ret;
 	else if (ret = ShiftExpr(parser))
-		return puts("<<<< Expr"), ret;
-	puts("<<<< Expr");
+		return ret;
 	return 0;
 }
 
@@ -589,7 +561,6 @@ static int Opcode(struct parser *parser)
 	int invalid = 0;
 	int ret = 0;
 
-	puts(">> Opcode");
 	if (Match(parser, KW_BREAK)) {
 		brk = 1;
 	}
@@ -597,13 +568,11 @@ static int Opcode(struct parser *parser)
 	if (Match(parser, KW_NOP)) {
 		parser->op = OP_NOP;
 		program_set_opcode(parser->program, parser->address, NOP, brk, 0);
-		puts("<< Opcode");
 		return 1;
 	}
 	else if (Match(parser, KW_HALT)) {
 		parser->op = OP_HALT;
 		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
-		puts("<< Opcode");
 		return 1;
 	}
 	else {
@@ -620,7 +589,6 @@ static int Opcode(struct parser *parser)
 				Panic(parser, X584ASM_INVALID_OPCODE);
 			else
 				SeverePanic(parser, X584ASM_INVALID_OPCODE);
-			puts("<< -Opcode");
 			return 0;
 		}
 		else {
@@ -629,7 +597,6 @@ static int Opcode(struct parser *parser)
 		}
 	}
 
-	puts("<< +Opcode");
 	return 1;
 }
 
@@ -669,8 +636,6 @@ static int AddExpr(struct parser *parser)
 		}
 	}
 	while (term);
-
-	printf(": AddExpr: %08X\n", parser->arg_add);
 
 	return 1;
 }
@@ -808,13 +773,12 @@ static int Carry(struct parser *parser)
 {
 	int result = 0;
 
-	puts(">>> Carry");
 	if (!Match(parser, '('))
-		return puts("<<< -Carry"), 0;
+		return 0;
 	if (!Match(parser, KW_C))
-		return puts("<<< -Carry"), 0;
+		return 0;
 	if (!Match(parser, '='))
-		return puts("<<< -Carry"), 0;
+		return 0;
 	if (parser->input == RUNE_NUMBER) {
 		if (parser->token[0] == '0' && !parser->token[1]) {
 			parser->carry = CARRY_VALUE_0;
@@ -833,15 +797,13 @@ static int Carry(struct parser *parser)
 		}
 	}
 	if (!Match(parser, ')'))
-		return puts("<<< -Carry"), 0;
-	puts("<<< +Carry");
+		return 0;
 	return result;
 }
 
 static int Label(struct parser *parser)
 {
 	int no_label = 0;
-	puts(">> Label");
 	int label = 0;
 
 	if (!(label = MatchLabel(parser))) {
@@ -850,7 +812,6 @@ static int Label(struct parser *parser)
 				X584ASM_UNDEFINED_LABEL);
 			if (!Match(parser, ':')) {
 				SeverePanic(parser, X584ASM_COLON_EXPECTED);
-				puts("<< Label");
 				return 0;
 			}
 
@@ -858,20 +819,16 @@ static int Label(struct parser *parser)
 		else {
 			return 0; // maybe not label
 		}
-		puts("<< Label");
 	}
 	else {
-		printf(">>@ Found label %08X at address %d\n", label, parser->address);
 		program_set_label(parser->program, LABEL_ID(label), parser->address);
 
 		if (!Match(parser, ':')) {
 			SeverePanic(parser, X584ASM_COLON_EXPECTED);
-			puts("<< Label");
 			return 0;
 		}
 	}
 
-	puts("<< Label");
 	return 1;
 }
 
@@ -904,7 +861,6 @@ static int32_t GotoAddress(struct parser *parser)
 
 static int Operator(struct parser *parser)
 {
-	puts(">>> Operator");
 	if (Match(parser, KW_IF)) {
 		return Conditional(parser);
 	}
@@ -914,14 +870,12 @@ static int Operator(struct parser *parser)
 	else if (Match(parser, KW_INPUT)) {
 		return Input(parser);
 	}
-	puts("<<< Operator");
 	return 0;
 }
 
 static int Conditional(struct parser *parser)
 {
 	int32_t flag = 0, label_then = LABEL_NEXT, label_else = LABEL_NEXT;
-	puts(">>>> Conditional");
 	if (Match(parser, KW_C) || Match(parser, KW_CO3)) { flag = KW_CO3; }
 	else if (Match(parser, KW_CO2)) { flag = KW_CO2; }
 	else if (Match(parser, KW_CO1)) { flag = KW_CO1; }
@@ -937,37 +891,31 @@ static int Conditional(struct parser *parser)
 		else if (Match(parser, KW_SHR2)) { flag = ~KW_SHR2; }
 		else {
 			SeverePanic(parser, X584ASM_FLAG_EXPECTED);
-			puts("<<<< Conditional");
 			return 0;
 		}
 	}
 	else {
 		SeverePanic(parser, X584ASM_FLAG_EXPECTED);
-		puts("<<<< Conditional");
 		return 0;
 	}
 	if (!Match(parser, KW_THEN)) {
 		SeverePanic(parser, X584ASM_THEN_EXPECTED);
-		puts("<<<< Conditional");
 		return 0;
 	}
 	label_then = GotoAddress(parser);
 	if (!label_then) {
 		SeverePanic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
-		puts("<<<< Conditional");
 		return 0;
 	}
 	if (Match(parser, KW_ELSE)) {
 		label_else = GotoAddress(parser);
 		if (!label_else) {
 			SeverePanic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
-			puts("<<<< Conditional");
 			return 0;
 		}
 	}
 	program_set_if(parser->program, parser->address, flag, label_then, label_else);
 
-	puts("<<<< Conditional");
 	return 1;
 }
 
@@ -1084,7 +1032,6 @@ static int Annotation(struct parser *parser)
 	sds temp;
 	int n = 0;
 
-	puts(">>> Annotation");
 
 	if (!annotation) Die(X584ASM_OUT_OF_MEMORY);
 	while (parser->input == RUNE_STRING) { 
@@ -1096,26 +1043,16 @@ static int Annotation(struct parser *parser)
 	if (Match(parser, INPUT_ERROR)) {
 		sdsfree(annotation);
 		SeverePanic(parser, 0);
-		puts("<<< Annotation");
 		return 0;
 	}
 
 	program_move_annotation(parser->program, parser->address, annotation);
-	puts("<<< Annotation");
 	return 1;
 }
 
 static int GenerateOpcode(struct parser *parser)
 {
 	int opcode, tmp;
-
-	printf("@ Opcode (%d) %d %d %d %d %d %d %d\n", 
-			parser->address,
-			parser->op,
-			parser->var, parser->reg,
-			parser->arg1, parser->arg2,
-			parser->arg_add,
-			parser->carry);
 
 	opcode = -1;
 	for (int i = 0; _opcodes[i].op; i++) {
@@ -1130,15 +1067,6 @@ static int GenerateOpcode(struct parser *parser)
 		if (parser->arg2 != _opcodes[i].arg2)
 			continue;
 
-		printf("@ Find (%d,%d) (%d,%d) (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n",
-			_opcodes[i].op, parser->op, 
-			_opcodes[i].var, parser->var, 
-			_opcodes[i].reg, parser->reg,
-			_opcodes[i].arg1, parser->arg1, 
-			_opcodes[i].arg2, parser->arg2,
-			_opcodes[i].arg_add, parser->arg_add
-		);
-
 		if (parser->op == OP_ADD_SUB_NEG 
 			|| parser->op == OP_SHL || parser->op == OP_SHR
 			|| parser->op == OP_SAL || parser->op == OP_SAR
@@ -1148,7 +1076,6 @@ static int GenerateOpcode(struct parser *parser)
 			|| parser->op == OP_ROL_X || parser->op == OP_ROR_X)
 		{
 			if (parser->arg_add == _opcodes[i].arg_add) {
-				printf("@ Found 0%03o\n", _opcodes[i].opcode);
 				opcode = _opcodes[i].opcode;
 				break;
 			}
@@ -1156,7 +1083,6 @@ static int GenerateOpcode(struct parser *parser)
 				tmp = _opcodes[i].arg_add & ~(ARG(SUB_1)|ARG(ADD_C));
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
-					printf("@ Found 0%03o (C=1)\n", opcode);
 					parser->carry = CARRY_VALUE_1;
 					break;
 				}
@@ -1169,7 +1095,6 @@ static int GenerateOpcode(struct parser *parser)
 				tmp |= ARG(ADD_1);
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
-					printf("@ Found 0%03o (C=1)\n", opcode);
 					parser->carry = CARRY_VALUE_1;
 					break;
 				}
@@ -1178,14 +1103,12 @@ static int GenerateOpcode(struct parser *parser)
 				tmp = _opcodes[i].arg_add & ~ARG(ADD_C);
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
-					printf("@ Found 0%03o (C=0)\n", opcode);
 					parser->carry = CARRY_VALUE_0;
 					break;
 				}
 				tmp |= ARG(ADD_1);
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
-					printf("@ Found 0%03o (C=1)\n", opcode);
 					parser->carry = CARRY_VALUE_1;
 					break;
 				}
@@ -1204,7 +1127,6 @@ static int GenerateOpcode(struct parser *parser)
 	}
 
 	if (parser->invalid) {
-		printf("@ Invalid opcode\n");
 		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
 		program_set_annotation(parser->program, parser->address, "<<INVALID>>");
 		return 0;
