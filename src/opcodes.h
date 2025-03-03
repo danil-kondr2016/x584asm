@@ -26,7 +26,7 @@ struct opcode_data {
 	{0, VAR_##_var, 0, REG_N##_a, REG_##_b, OP_AND, CARRY_UNUSED, 0540|(_x)},\
 	{0, VAR_##_var, 0, REG_##_a, REG_N##_b, OP_AND, CARRY_UNUSED, 0600|(_x)},\
 	{0, VAR_##_var, 0, REG_##_a, REG_N##_b, OP_OR, CARRY_UNUSED, 0640|(_x)},\
-	{0, VAR_##_var, 0, REG_N##_a, REG_N##_b, OP_OR, CARRY_UNUSED, 0700|(_x)},\
+	{0, VAR_##_var, 0, REG_N##_a, REG_##_b, OP_OR, CARRY_UNUSED, 0700|(_x)},\
 	{0, VAR_##_var, 0, REG_##_a, REG_##_b, OP_OR, CARRY_UNUSED, 0740|(_x)}
 
 #define SUM2_REG1(_var, _b, _op) \
