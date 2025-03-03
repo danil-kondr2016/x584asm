@@ -284,7 +284,7 @@ static void u8string_v2(FILE *output, char *str)
 
 	do {
 		int byte = (len & 0x7F);
-		byte >>= 7;
+		len >>= 7;
 		if (len)
 			byte |= 0x80;
 		fputc(byte, output);	
