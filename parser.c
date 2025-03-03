@@ -65,9 +65,6 @@ static int Back(struct parser *parser);
 static int Match(struct parser *parser, int32_t rune);
 static void Panic(struct parser *parser, int error);
 static void SeverePanic(struct parser *parser, int error);
-static void EmitOpcode(struct parser *parser, int opcode, int brk, int carry,
-		int carry_val);
-static void EmitAnnotation(struct parser *parser, char *annotation);
 static int GenerateOpcode(struct parser *parser);
 
 static int32_t Consume(struct parser *parser)
@@ -600,13 +597,13 @@ static int Opcode(struct parser *parser)
 
 	if (Match(parser, KW_NOP)) {
 		parser->op = OP_NOP;
-		EmitOpcode(parser, NOP, brk, 0, 0);
+		program_set_opcode(parser->program, parser->address, NOP, brk, 0);
 		puts("<< Opcode");
 		return 1;
 	}
 	else if (Match(parser, KW_HALT)) {
 		parser->op = OP_HALT;
-		EmitOpcode(parser, NOP, 1, 0, 0);
+		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
 		puts("<< Opcode");
 		return 1;
 	}
@@ -974,10 +971,7 @@ static int Conditional(struct parser *parser)
 			return 0;
 		}
 	}
-	parser->program[parser->address].condition[0] = KW_IF;
-	parser->program[parser->address].condition[1] = flag;
-	parser->program[parser->address].condition[2] = label_then;
-	parser->program[parser->address].condition[3] = label_else;
+	program_set_if(parser->program, parser->address, flag, label_then, label_else);
 
 	puts("<<<< Conditional");
 	return 1;
@@ -991,8 +985,7 @@ static int Goto(struct parser *parser)
 		SeverePanic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
 		return 0;
 	}
-	parser->program[parser->address].condition[0] = KW_GOTO;
-	parser->program[parser->address].condition[1] = label_to;
+	program_set_goto(parser->program, parser->address, label_to);
 
 	return 1;
 }
@@ -1086,8 +1079,7 @@ static int Input(struct parser *parser)
 			Consume(parser);
 		}
 	}
-	parser->program[parser->address].condition[0] = KW_INPUT;
-	parser->program[parser->address].condition[1] = input_num;
+	program_set_input(parser->program, parser->address, input_num);
 	
 	return 1;
 }
@@ -1114,29 +1106,9 @@ static int Annotation(struct parser *parser)
 		return 0;
 	}
 
-	parser->program[parser->address].annotation = annotation;
+	program_move_annotation(parser->program, parser->address, annotation);
 	puts("<<< Annotation");
 	return 1;
-}
-
-static void EmitAnnotation(struct parser *parser, char *annotation)
-{
-	parser->program[parser->address].annotation = sdsnew(annotation);
-}
-
-#define ATTR_BREAK 0x8000
-#define ATTR_CUSED 0x2000
-#define ATTR_CARRY 0x4000
-
-static void EmitOpcode(struct parser *parser, int opcode, int brk, int carry,
-		int carry_val)
-{
-	parser->program[parser->address].opcode = 
-		(opcode & 0x1FF)
-		| (brk ? ATTR_BREAK : 0)
-		| (carry ? (carry_val ? ATTR_CARRY | ATTR_CUSED : ATTR_CUSED) : 0);
-	printf("@ Emit 0%03o %d %d %d 0x%04X\n", opcode, brk, carry, carry_val,
-			parser->program[parser->address].opcode);
 }
 
 static int GenerateOpcode(struct parser *parser)
@@ -1252,19 +1224,18 @@ static int GenerateOpcode(struct parser *parser)
 
 	if (parser->invalid) {
 		printf("@ Invalid opcode\n");
-		EmitOpcode(parser, NOP, 1, 0, 0);
-		EmitAnnotation(parser, "<<INVALID>>");
+		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
+		program_set_annotation(parser->program, parser->address, "<<INVALID>>");
 		return 0;
 	}
 	else {
-		EmitOpcode(parser, opcode, parser->brk,
-			parser->carry, parser->carry_val);
+		program_set_opcode(parser->program, parser->address, opcode, parser->brk, parser->carry);
 	}
 
 	return 1;
 }
 
-int parser_init(struct parser *parser, struct lexer *lexer)
+int parser_init(struct parser *parser, struct lexer *lexer, struct program *program)
 {
 	if (!parser)
 		return 0;
@@ -1272,15 +1243,14 @@ int parser_init(struct parser *parser, struct lexer *lexer)
 		return 0;
 	if (!lexer->reader)
 		return 0;
+	if (!program)
+		return 0;
 
 	memset(parser, 0, sizeof(struct parser));
 	parser->lexer = lexer;
 	parser->prev_input = parser->input = parser->next_input
 		= INPUT_NOT_SAVED;
-
-	for (int i = 0; i < N_INSTRUCTIONS; i++) {
-		parser->program[i].opcode = NOP;
-	}
+	program_init(program);
 
 	return 1;
 }

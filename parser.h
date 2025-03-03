@@ -10,12 +10,6 @@
 #define N_INSTRUCTIONS 1024
 #define LABEL_NEXT (N_INSTRUCTIONS + MAX_LABELS)
 
-struct instruction {
-	uint32_t opcode;
-	int32_t condition[9];
-	sds annotation;
-};
-
 enum variable {
 	VAR_NONE,
 	VAR_R0,
@@ -144,8 +138,7 @@ enum op {
 };
 
 struct parser {
-	struct instruction program[N_INSTRUCTIONS];
-	int32_t labels[N_INSTRUCTIONS];
+	struct program *program;
 	struct lexer *lexer;
 
 	sds prev_token;
@@ -167,7 +160,7 @@ struct parser {
 	uint8_t brk, carry, carry_val, invalid;
 };
 
-int parser_init(struct parser *parser, struct lexer *lexer);
+int parser_init(struct parser *parser, struct lexer *lexer, struct program *program);
 int parser_run(struct parser *parser);
 int parser_output(struct parser *parser, char *u8path);
 

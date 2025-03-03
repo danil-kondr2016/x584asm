@@ -11,7 +11,6 @@
 #define INPUT_EOF       ((int32_t)(-1))
 
 #define N_KEYWORDS 2048
-#define MAX_LABELS 1024
 #define RUNE_LABEL(n) ((int32_t)(INT32_C(0x00210000) | ((n & 0xFFFF))))
 
 #define IS_RUNE_LABEL(x) ((x & INT32_C(0xFFFF0000)) == INT32_C(0x00210000))
