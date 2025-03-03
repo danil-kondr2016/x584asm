@@ -379,6 +379,7 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	case REG_1: flag = sub ? ARG_SUB_1 : ARG_ADD_1; id = 0; break;
 	case REG_0: flag = ARG_0; id = 0; break;
 	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; break;
+	case REG_NC: flag = sub ? ARG_SUB_NC : ARG_ADD_NC; id = 0; break;
 	}
 
 	if ((flag > -1) && parser->arg_add & (1 << flag)) {
@@ -605,16 +606,19 @@ static int Opcode(struct parser *parser)
 
 static int AddLogExpr(struct parser *parser)
 {
-	int term, count = 0;
+	int term;
 
 	parser->op = OP_NONE;
 	term = Term(parser);
 	if (!term)
 		return 0;
 
+	parser->arg_add = 0;
+	parser->reg = 0;
+	AddRegister(parser, term, 0);
 	do {
 		if (parser->input == '+' || parser->input == '-') {
-			int sub = parser->input == '+' ? 1 : 0;
+			int sub = parser->input == '+' ? 0 : 1;
 
 			if (!parser->op)
 			       parser->op = OP_ADD_SUB_NEG;
@@ -623,13 +627,12 @@ static int AddLogExpr(struct parser *parser)
 					&& parser->op != OP_SAL && parser->op != OP_SAL_X
 					&& parser->op != OP_SAR && parser->op != OP_SAR_X
 					&& parser->op != OP_ROL && parser->op != OP_ROL_X
-					&& parser->op != OP_ROR && parser->op != OP_ROR_X)
+					&& parser->op != OP_ROR && parser->op != OP_ROR_X
+					&& parser->op != OP_ADD_SUB_NEG)
 			{
 				return 0;
 			}
 
-			if (!parser->arg_add)
-				AddRegister(parser, term, 0);
 			Consume(parser);
 
 			term = Term(parser);
@@ -678,6 +681,9 @@ static int AddLogExpr(struct parser *parser)
 		}
 	}
 	while (term);
+
+	if (!parser->op)
+		parser->op = OP_ADD_SUB_NEG;
 
 	return 1;
 }
