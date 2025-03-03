@@ -261,8 +261,7 @@ static int Instruction(struct parser *parser)
 	parser->arg1 = 0;
 	parser->arg2 = 0;
 	parser->brk = 0;
-	parser->carry = 0;
-	parser->carry_val = 0;
+	parser->carry = CARRY_UNUSED;
 	parser->invalid = 0;
 
 	puts("> Instruction");
@@ -788,16 +787,13 @@ static int ShiftExpr(struct parser *parser)
 	}
 
 	if (parser->arg_add == X_WR_p_C) {
-		parser->carry = 0;
-		parser->carry_val = 0;
+		parser->carry = CARRY_INDEFINITE;
 	}
 	else if (parser->arg_add == X_WR_p_1) {
-		parser->carry = 1;
-		parser->carry_val = 1;
+		parser->carry = CARRY_VALUE_1;
 	}
 	else if (parser->arg_add == ARG(ADD_WR)) {
-		parser->carry = 1;
-		parser->carry_val = 0;
+		parser->carry = CARRY_VALUE_0;
 	}
 	else {
 		parser->invalid = 1;
@@ -821,14 +817,12 @@ static int Carry(struct parser *parser)
 		return puts("<<< -Carry"), 0;
 	if (parser->input == RUNE_NUMBER) {
 		if (parser->token[0] == '0' && !parser->token[1]) {
-			parser->carry = 1;
-			parser->carry_val = 0;
+			parser->carry = CARRY_VALUE_0;
 		       	result = 1;
 			Consume(parser);
 		}
 		else if (parser->token[0] == '1' && !parser->token[1]) {
-			parser->carry = 1;
-			parser->carry_val = 1;
+			parser->carry = CARRY_VALUE_1;
 			result = 1;
 			Consume(parser);
 		}
@@ -868,7 +862,7 @@ static int Label(struct parser *parser)
 	}
 	else {
 		printf(">>@ Found label %08X at address %d\n", label, parser->address);
-		parser->labels[LABEL_ID(label)] = parser->address;
+		program_set_label(parser->program, LABEL_ID(label), parser->address);
 
 		if (!Match(parser, ':')) {
 			SeverePanic(parser, X584ASM_COLON_EXPECTED);
@@ -1115,20 +1109,13 @@ static int GenerateOpcode(struct parser *parser)
 {
 	int opcode, tmp;
 
-	printf("@ Opcode (%d) %d %d %d %d %d %d %d %d\n", 
+	printf("@ Opcode (%d) %d %d %d %d %d %d %d\n", 
 			parser->address,
 			parser->op,
 			parser->var, parser->reg,
 			parser->arg1, parser->arg2,
 			parser->arg_add,
-			parser->carry, parser->carry_val);
-	printf("@ Operator %08X %08X %08X %08X\n",
-		parser->program[parser->address].condition[0],
-		parser->program[parser->address].condition[1],
-		parser->program[parser->address].condition[2],
-		parser->program[parser->address].condition[3]);
-	printf("@ Annotation %s\n",
-		parser->program[parser->address].annotation);
+			parser->carry);
 
 	opcode = -1;
 	for (int i = 0; _opcodes[i].op; i++) {
@@ -1170,6 +1157,7 @@ static int GenerateOpcode(struct parser *parser)
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
 					printf("@ Found 0%03o (C=1)\n", opcode);
+					parser->carry = CARRY_VALUE_1;
 					parser->carry = 1;
 					parser->carry_val = 1;
 					break;
@@ -1177,17 +1165,14 @@ static int GenerateOpcode(struct parser *parser)
 				tmp = _opcodes[i].arg_add & ~(ARG(ADD_C));
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
-					printf("@ Found 0%03o (C=1)\n", opcode);
-					parser->carry = 1;
-					parser->carry_val = 0;
+					parser->carry = CARRY_VALUE_0;
 					break;
 				}
 				tmp |= ARG(ADD_1);
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
 					printf("@ Found 0%03o (C=1)\n", opcode);
-					parser->carry = 1;
-					parser->carry_val = 1;
+					parser->carry = CARRY_VALUE_1;
 					break;
 				}
 			}
@@ -1196,16 +1181,14 @@ static int GenerateOpcode(struct parser *parser)
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
 					printf("@ Found 0%03o (C=0)\n", opcode);
-					parser->carry = 1;
-					parser->carry_val = 0;
+					parser->carry = CARRY_VALUE_0;
 					break;
 				}
 				tmp |= ARG(ADD_1);
 				if (tmp == parser->arg_add) {
 					opcode = _opcodes[i].opcode;
 					printf("@ Found 0%03o (C=1)\n", opcode);
-					parser->carry = 1;
-					parser->carry_val = 1;
+					parser->carry = CARRY_VALUE_1;
 					break;
 				}
 			}
@@ -1251,6 +1234,7 @@ int parser_init(struct parser *parser, struct lexer *lexer, struct program *prog
 	parser->prev_input = parser->input = parser->next_input
 		= INPUT_NOT_SAVED;
 	program_init(program);
+	parser->program = program;
 
 	return 1;
 }

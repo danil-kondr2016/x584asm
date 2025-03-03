@@ -6,9 +6,7 @@
 
 #include "sds.h"
 #include "lexer.h"
-
-#define N_INSTRUCTIONS 1024
-#define LABEL_NEXT (N_INSTRUCTIONS + MAX_LABELS)
+#include "program.h"
 
 enum variable {
 	VAR_NONE,
