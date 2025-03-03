@@ -170,8 +170,7 @@ static int Opcode(struct parser *parser);
 static int Assign(struct parser *parser);
 static int Variable(struct parser *parser);
 static int Expr(struct parser *parser);
-static int AddExpr(struct parser *parser);
-static int LogExpr(struct parser *parser);
+static int AddLogExpr(struct parser *parser);
 static int NXorExpr(struct parser *parser);
 static int ShiftExpr(struct parser *parser);
 static int Term(struct parser *parser);
@@ -256,6 +255,7 @@ static int Instruction(struct parser *parser)
 	parser->arg2 = 0;
 	parser->brk = 0;
 	parser->carry = CARRY_UNUSED;
+	parser->error = 0;
 	parser->invalid = 0;
 
 	if (parser->input == INPUT_EOF) {
@@ -529,7 +529,7 @@ static int XAssign(struct parser *parser)
 		parser->error = X584ASM_LPAR_EXPECTED;
 		return 0;
 	}
-	if (!AddExpr(parser))
+	if (!AddLogExpr(parser))
 		return 0;
 	if (!Match(parser, ',')) {
 		parser->error = X584ASM_COMMA_EXPECTED;
@@ -549,11 +549,7 @@ static int Expr(struct parser *parser)
 {
 	int ret;
 
-	if (ret = AddExpr(parser)) {
-		parser->op = OP_ADD_SUB_NEG;
-		return ret;
-	}
-	else if (ret = LogExpr(parser))
+	if (ret = AddLogExpr(parser))
 		return ret;
 	else if (ret = NXorExpr(parser))
 		return ret;
@@ -607,34 +603,73 @@ static int Opcode(struct parser *parser)
 	return 1;
 }
 
-static int AddExpr(struct parser *parser)
+static int AddLogExpr(struct parser *parser)
 {
-	int term;
+	int term, count = 0;
 
+	parser->op = OP_NONE;
 	term = Term(parser);
 	if (!term)
 		return 0;
 
-	AddRegister(parser, term, 0);
 	do {
-		if (Match(parser, '+')) {
+		if (parser->input == '+' || parser->input == '-') {
+			int sub = parser->input == '+' ? 1 : 0;
+
+			if (!parser->op)
+			       parser->op = OP_ADD_SUB_NEG;
+			else if (parser->op != OP_SHL && parser->op != OP_SHL_X
+					&& parser->op != OP_SHR && parser->op != OP_SHR_X
+					&& parser->op != OP_SAL && parser->op != OP_SAL_X
+					&& parser->op != OP_SAR && parser->op != OP_SAR_X
+					&& parser->op != OP_ROL && parser->op != OP_ROL_X
+					&& parser->op != OP_ROR && parser->op != OP_ROR_X)
+			{
+				return 0;
+			}
+
+			if (!parser->arg_add)
+				AddRegister(parser, term, 0);
+			Consume(parser);
+
 			term = Term(parser);
 			if (!term) {
 				SeverePanic(parser, X584ASM_TERM_EXPECTED);
 				return 0;
 			}
-			AddRegister(parser, term, 0);
-		}
-		else if (Match(parser, '-')) {
-			term = Term(parser);
-			if (!term) {
-				SeverePanic(parser, X584ASM_TERM_EXPECTED);
-				return 0;
-			}
-			AddRegister(parser, term, 1);
+			AddRegister(parser, term, sub);
 		}
 		else if (parser->input == KW_AND || parser->input == KW_OR || parser->input == KW_XOR) {
-			Back(parser);
+			if (parser->op != OP_NONE) {
+				return 0;
+			}
+
+			parser->arg_add = 0;
+			parser->reg = 0;
+			parser->arg1 = term;
+
+			if (parser->input == KW_AND) {			
+				parser->op = OP_AND;
+			}
+			else if (parser->input == KW_OR) {
+				parser->op = OP_OR;
+			}
+			else if (parser->input == KW_XOR) {
+				parser->op = OP_XOR;
+			}
+			else {
+				SeverePanic(parser, X584ASM_OP_EXPECTED);
+				return 0;
+			}
+			Consume(parser);
+
+			term = Term(parser);
+			if (!term) {
+				SeverePanic(parser, X584ASM_TERM_EXPECTED);
+				return 0;
+			}
+
+			parser->arg2 = term;
 			break;
 		}
 		else {
@@ -643,40 +678,6 @@ static int AddExpr(struct parser *parser)
 		}
 	}
 	while (term);
-
-	return 1;
-}
-
-static int LogExpr(struct parser *parser)
-{
-	int term;
-
-	term = Term(parser);
-	if (!term) {
-		return 0;
-	}
-	parser->arg1 = term;
-
-	if (Match(parser, KW_AND)) {
-		parser->op = OP_AND;
-	}
-	else if (Match(parser, KW_XOR)) {
-		parser->op = OP_XOR;
-	}
-	else if (Match(parser, KW_OR)) {
-		parser->op = OP_OR;
-	}
-	else {
-		SeverePanic(parser, X584ASM_OP_EXPECTED);
-		return 0;
-	}
-
-	term = Term(parser);
-	if (!term) {
-		SeverePanic(parser, X584ASM_TERM_EXPECTED);
-		return 0;
-	}
-	parser->arg2 = term;
 
 	return 1;
 }
@@ -742,7 +743,6 @@ static int ShiftExpr(struct parser *parser)
 
 	shift_op = ShiftOp(parser);
 	if (!shift_op) {
-		SeverePanic(parser, X584ASM_SHIFT_OP_EXPECTED);
 		return 0;
 	}
 
@@ -753,7 +753,7 @@ static int ShiftExpr(struct parser *parser)
 		return 0;
 	}
 
-	if (!AddExpr(parser)) {
+	if (!AddLogExpr(parser)) {
 		SeverePanic(parser, X584ASM_INVALID_OPCODE);
 		return 0;
 	}
@@ -1127,8 +1127,11 @@ static int GenerateOpcode(struct parser *parser)
 		}
 	}
 
-	if (opcode == -1)
+	if (opcode == -1) {
 		parser->invalid = 1;
+		Error(parser->lexer->line, parser->lexer->col,
+			X584ASM_INVALID_OPCODE);
+	}
 	if (parser->op == OP_HALT) {
 		parser->brk = 1;
 	}
