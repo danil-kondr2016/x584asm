@@ -27,7 +27,7 @@ static int32_t _l_getc(struct lexer *lexer)
 	lexer->input = reader_getc(lexer->reader);
 	if (_is_newline(lexer->input)) {
 		lexer->line++;
-		lexer->col = 1;
+		lexer->col = 0;
 	}
 	return lexer->input;
 }
@@ -40,6 +40,8 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 		return 0;
 	memset(lexer, 0, sizeof(struct lexer));
 	lexer->reader = reader;
+	lexer->line = 1;
+	lexer->col = 0;
 
 	lexer_register(lexer, "РОН0", KW_RF0);
 	lexer_register(lexer, "РОН1", KW_RF1);
