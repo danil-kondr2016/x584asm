@@ -7,7 +7,7 @@
 
 #define NOP 154
 
-#include "opcodes.c"
+#include "opcodes.h"
 
 /*
  * Grammar of language:
