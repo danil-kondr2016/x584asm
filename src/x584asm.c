@@ -1,9 +1,10 @@
 #include "reader.h"
 #include "lexer.h"
 #include "parser.h"
-#include "sds.h"
-#include "utf8proc.h"
 #include "program.h"
+
+#include <sds.h>
+#include <utf8proc.h>
 
 int main(void)
 {

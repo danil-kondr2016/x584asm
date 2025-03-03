@@ -1,6 +1,6 @@
 #include "parser.h"
 
-#include "sds.h"
+#include <sds.h>
 
 #include <stdlib.h>
 #include <string.h>

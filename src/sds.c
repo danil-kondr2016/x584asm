@@ -34,7 +34,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#include "sds.h"
+#include <sds.h>
 #include "sdsalloc.h"
 
 static inline int sdsHdrSize(char type) {

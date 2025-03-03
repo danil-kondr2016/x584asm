@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "sds.h"
+#include <sds.h>
 
 #define N_INSTRUCTIONS 1024
 #define MAX_LABELS     1024

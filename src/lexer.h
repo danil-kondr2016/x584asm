@@ -2,9 +2,9 @@
 #define _lexer_h_
 
 #include <stdint.h>
+#include <sds.h>
 
 #include "reader.h"
-#include "sds.h"
 #include "x584err.h"
 
 #define INPUT_NOT_SAVED ((int32_t)(-2))
