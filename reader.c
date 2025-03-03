@@ -5,13 +5,10 @@
 #define REPLACEMENT 0xFFFD
 
 #include "reader.h"
+#include "utils.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <wchar.h>
-#endif
 
 #include "utf8proc.h"
 
@@ -21,21 +18,7 @@ int reader_open(struct reader *r, char *u8path)
 		return 0;
 	memset(r, 0, sizeof(struct reader));
 	r->temp = CRLF_NOT_SAVED;
-#ifdef _WIN32
-	{
-		wchar_t *wpath;
-		int wpath_size;
-
-		wpath_size = MultiByteToWideChar(CP_UTF8, 0, u8path, -1, 0, 0) + 1;
-		wpath = calloc(wpath_size, sizeof(wchar_t));
-		if (!wpath)
-			return 0;
-		MultiByteToWideChar(CP_UTF8, 0, u8path, -1, wpath, wpath_size);
-		r->file = _wfopen(wpath, L"rb");
-	}
-#else
-	r->file = fopen(u8path, "rb");
-#endif
+	r->file = u8open(u8path, "rb");
 	if (!r->file) {
 		int error = errno;
 		fprintf(stderr, "! Failed to open file %s: %s\n", u8path,
