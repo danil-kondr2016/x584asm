@@ -250,6 +250,7 @@ static int Instruction(struct parser *parser)
 
 	parser->var = VAR_NONE;
 	parser->reg = REG_NONE;
+	parser->op = OP_NONE;
 	parser->arg_add = 0;
 	parser->arg1 = 0;
 	parser->arg2 = 0;
@@ -469,9 +470,6 @@ static int Term(struct parser *parser)
 		Consume(parser);
 		result = REG_INVALID;
 	}
-	else {
-		SeverePanic(parser, X584ASM_UNEXPECTED_SYMBOL);
-	}
 
 	return result;
 }
@@ -608,7 +606,6 @@ static int AddLogExpr(struct parser *parser)
 {
 	int term;
 
-	parser->op = OP_NONE;
 	term = Term(parser);
 	if (!term)
 		return 0;
@@ -763,6 +760,12 @@ static int ShiftExpr(struct parser *parser)
 		SeverePanic(parser, X584ASM_INVALID_OPCODE);
 		return 0;
 	}
+
+	if (!Match(parser, ')')) {
+		SeverePanic(parser, X584ASM_LPAR_EXPECTED);
+		return 0;
+	}
+
 
 	if (parser->arg_add == X_WR_p_C) {
 		parser->carry = CARRY_INDEFINITE;
