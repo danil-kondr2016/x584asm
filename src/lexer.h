@@ -46,6 +46,7 @@ struct lexer {
 	struct reader *reader;
 	int32_t input;
 	int keywords_count;
+	int input_line, input_col;
 	int line, col;
 };
 

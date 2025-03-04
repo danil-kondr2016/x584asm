@@ -23,11 +23,11 @@ static int _is_newline(int32_t codepoint)
 
 static int32_t _l_getc(struct lexer *lexer)
 {
-	lexer->col++;
+	lexer->input_col++;
 	lexer->input = reader_getc(lexer->reader);
 	if (_is_newline(lexer->input)) {
-		lexer->line++;
-		lexer->col = 0;
+		lexer->input_line++;
+		lexer->input_col = 1;
 	}
 	return lexer->input;
 }
@@ -40,8 +40,10 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 		return 0;
 	memset(lexer, 0, sizeof(struct lexer));
 	lexer->reader = reader;
-	lexer->line = 1;
-	lexer->col = 0;
+	lexer->input_line = 1;
+	lexer->input_col = 1;
+	lexer->line = lexer->input_line;
+	lexer->col = lexer->input_col;
 
 	lexer_register(lexer, "РОН0", KW_RF0);
 	lexer_register(lexer, "РОН1", KW_RF1);
@@ -180,6 +182,9 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 		sdsfree(*token);
 	*token = NULL;
 
+	lexer->line = lexer->input_line;
+	lexer->col = lexer->input_col;
+
 	do {
 		if (lexer->input == INPUT_NOT_SAVED)
 			_l_getc(lexer);
@@ -210,24 +215,29 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			}
 			break;
 		case '"':
-			return _string(lexer, token);
+			result = _string(lexer, token);
+			end = 1;
+			break;
 		case '0':
 			_l_getc(lexer);
 			if (lexer->input == 'x' || lexer->input == 'X') {
 				lexer->input = INPUT_NOT_SAVED;
-				return _hex(lexer, token);
+				result = _hex(lexer, token);
 			}
 			else if (lexer->input >= '0' && lexer->input <= '9') {
-				return _number0(lexer, token);
+				result = _number0(lexer, token);
 			}
 			else {
 				*token = sdsnew("0");
-				return RUNE_NUMBER;
+				result = RUNE_NUMBER;
 			}
+			end = 1;
 			break;
 		case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
-			return _number(lexer, token);
+			result = _number(lexer, token);
+			end = 1;
+			break;
 		case '\n':
 		case '\t':
 		case '\r':
@@ -241,7 +251,9 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			case UTF8PROC_CATEGORY_LM:
 			case UTF8PROC_CATEGORY_LO:
 			case UTF8PROC_CATEGORY_PC: // _
-				return _word(lexer, token);
+				result = _word(lexer, token);
+				end = 1;
+				break;
 			case UTF8PROC_CATEGORY_ZS:
 			case UTF8PROC_CATEGORY_ZL:
 			case UTF8PROC_CATEGORY_ZP:
@@ -254,6 +266,7 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			}
 		}
 	} while (!end);
+
 	return result;
 }
 
@@ -396,13 +409,15 @@ static int32_t _string_cb(struct lexer *lexer, sds *token)
 		case 'u': return _unicode(lexer, token, 4);
 		case 'U': return _unicode(lexer, token, 8);
 		default:
-			  return Error(lexer->line, lexer->col, X584ASM_INVALID_ESCAPE_SEQUENCE);
+			  return Error(lexer->input_line, lexer->input_col, 
+					  X584ASM_INVALID_ESCAPE_SEQUENCE);
 		}
 		break;
 	case '"':
 		return INPUT_EOF;
 	case '\n':
-		return Error(lexer->line, lexer->col, X584ASM_PREMATURE_END_OF_LINE);
+		return Error(lexer->input_line, lexer->input_col, 
+				X584ASM_PREMATURE_END_OF_LINE);
 	default:
 		return result;
 	}	
@@ -432,7 +447,8 @@ static int32_t _unicode(struct lexer *lexer, sds *token, int n)
 			result += (lexer->input) - 'a' + 10;
 			break;
 		default:
-			return Error(lexer->line, lexer->col, X584ASM_INVALID_ESCAPE_SEQUENCE);
+			return Error(lexer->input_line, lexer->input_col, 
+					X584ASM_INVALID_ESCAPE_SEQUENCE);
 		}
 	}
 	return result;
