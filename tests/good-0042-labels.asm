@@ -1,4 +1,3 @@
-labels first, second;
 NOP, если П то first;
 NOP;
 first: HALT, если П то second;
