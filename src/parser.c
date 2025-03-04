@@ -357,6 +357,7 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 {
 	int flag = -1;
 	int invalid = 0;
+	int carry = 0;
 
 	switch (id) {
 	case REG_R0: case REG_R1: case REG_R2: case REG_R3:
@@ -379,8 +380,8 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	case REG_NDIP: flag = sub ? ARG_SUB_NDIP : ARG_ADD_NDIP; id = REG_DIP; break;
 	case REG_1: flag = sub ? ARG_SUB_1 : ARG_ADD_1; id = 0; break;
 	case REG_0: flag = ARG_0; id = 0; break;
-	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; break;
-	case REG_NC: flag = sub ? ARG_SUB_NC : ARG_ADD_NC; id = 0; break;
+	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; carry = 1; break;
+	case REG_NC: flag = sub ? ARG_SUB_NC : ARG_ADD_NC; id = 0; carry = 1; break;
 	}
 
 	if ((flag > -1) && parser->arg_add & (1 << flag)) {
@@ -396,6 +397,8 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	else {
 		if (id != REG_WR && id != REG_XWR && id != REG_DIP && id)
 			parser->reg = id;
+		if (carry)
+			parser->carry = CARRY_INDEFINITE;
 		parser->arg_add |= (1 << flag);
 	}
 
@@ -1069,6 +1072,13 @@ static int Annotation(struct parser *parser)
 static int GenerateOpcode(struct parser *parser)
 {
 	int opcode, tmp;
+#ifdef _DEBUG_FIND
+	printf("@ OP VR ARGS_ADD A1 A2 RG BK CY\n");
+	printf("@ %2d %2d %08X %2d %2d %2d %2d %2d\n",
+		parser->op, parser->var, parser->arg_add,
+		parser->arg1, parser->arg2, parser->reg,
+		parser->brk, parser->carry);
+#endif
 
 	opcode = -1;
 	for (int i = 0; _opcodes[i].op; i++) {
@@ -1082,6 +1092,17 @@ static int GenerateOpcode(struct parser *parser)
 			continue;
 		if (parser->arg2 != _opcodes[i].arg2)
 			continue;
+		if (parser->carry != _opcodes[i].carry) {
+			if (_opcodes[i].carry != CARRY_INDEFINITE)
+				continue;
+		}
+
+#ifdef _DEBUG_FIND
+		printf("? %2d %2d %08X %2d %2d %2d -- %2d\n",
+			_opcodes[i].op, _opcodes[i].var, _opcodes[i].arg_add,
+			_opcodes[i].arg1, _opcodes[i].arg2, _opcodes[i].reg,
+			_opcodes[i].carry);
+#endif
 
 		if (parser->op == OP_ADD_SUB_NEG 
 			|| parser->op == OP_SHL || parser->op == OP_SHR
@@ -1093,41 +1114,10 @@ static int GenerateOpcode(struct parser *parser)
 		{
 			if (parser->arg_add == _opcodes[i].arg_add) {
 				opcode = _opcodes[i].opcode;
+				if (parser->carry == CARRY_UNUSED) {
+					parser->carry = _opcodes[i].carry;
+				}
 				break;
-			}
-			else if ((_opcodes[i].arg_add & (ARG(SUB_1)|ARG(ADD_C))) == (ARG(SUB_1)|ARG(ADD_C))) {
-				tmp = _opcodes[i].arg_add & ~(ARG(SUB_1)|ARG(ADD_C));
-				if (tmp == parser->arg_add) {
-					opcode = _opcodes[i].opcode;
-					parser->carry = CARRY_VALUE_1;
-					break;
-				}
-				tmp = _opcodes[i].arg_add & ~(ARG(ADD_C));
-				if (tmp == parser->arg_add) {
-					opcode = _opcodes[i].opcode;
-					parser->carry = CARRY_VALUE_0;
-					break;
-				}
-				tmp |= ARG(ADD_1);
-				if (tmp == parser->arg_add) {
-					opcode = _opcodes[i].opcode;
-					parser->carry = CARRY_VALUE_1;
-					break;
-				}
-			}
-			else if (_opcodes[i].arg_add & ARG(ADD_C)) {
-				tmp = _opcodes[i].arg_add & ~ARG(ADD_C);
-				if (tmp == parser->arg_add) {
-					opcode = _opcodes[i].opcode;
-					parser->carry = CARRY_VALUE_0;
-					break;
-				}
-				tmp |= ARG(ADD_1);
-				if (tmp == parser->arg_add) {
-					opcode = _opcodes[i].opcode;
-					parser->carry = CARRY_VALUE_1;
-					break;
-				}
 			}
 		}
 		else {
