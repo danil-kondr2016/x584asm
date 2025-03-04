@@ -276,8 +276,10 @@ static int Instruction(struct parser *parser)
 
 	if (!ret) {
 		parser->invalid = 1;
-		if (!parser->error)
+		if (!parser->error) {
+			parser->error = X584ASM_SYNTAX_ERROR;
 			SeverePanic(parser, X584ASM_SYNTAX_ERROR);
+		}
 		else if (parser->error != X584ASM_INVALID_OPCODE)
 			SeverePanic(parser, parser->error);
 	}
@@ -285,7 +287,12 @@ static int Instruction(struct parser *parser)
 	if (parser->input == ';')
 		Consume(parser);
 
-	GenerateOpcode(parser);
+	if (!GenerateOpcode(parser)) {
+		if (!parser->error) {
+			Error(parser->lexer->line, parser->lexer->col,
+					X584ASM_INVALID_OPCODE);
+		}
+	}
 	parser->address++;
 	return 1;
 }
@@ -322,9 +329,6 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	}
 
 	if ((flag > -1) && parser->arg_add & (1 << flag)) {
-		if (!parser->invalid) 
-			Error(parser->lexer->line, parser->lexer->col,
-				X584ASM_INVALID_OPCODE);
 		parser->invalid = 1;
 	}
 	else if (id == REG_INVALID) {
@@ -1078,16 +1082,13 @@ static int GenerateOpcode(struct parser *parser)
 
 	if (opcode == -1) {
 		parser->invalid = 1;
-		Error(parser->lexer->line, parser->lexer->col,
-			X584ASM_INVALID_OPCODE);
 	}
 	if (parser->op == OP_HALT) {
 		parser->brk = 1;
 	}
 
 	if (parser->invalid) {
-		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
-		program_set_annotation(parser->program, parser->address, "<<INVALID>>");
+		program_set_opcode(parser->program, parser->address, 0777, 1, 0);
 		parser->valid = 0;
 		return 0;
 	}
