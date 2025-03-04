@@ -84,39 +84,8 @@ enum argument {
 #define FLAG(x) (1 << (x))
 #define ARG(x) (FLAG(ARG_##x))
 
-#define X_WR_m_REG_m_1_p_C (ARG(ADD_WR)|ARG(SUB_REG)|ARG(SUB_1)|ARG(ADD_C))
-#define X_REG_m_WR_m_1_p_C (ARG(ADD_REG)|ARG(SUB_WR)|ARG(SUB_1)|ARG(ADD_C))
-#define X_REG_p_WR_p_C     (ARG(ADD_REG)|ARG(ADD_WR)|ARG(ADD_C))
 #define X_WR_p_C           (ARG(ADD_WR)|ARG(ADD_C))
-#define X_NWR_p_C          (ARG(ADD_NWR)|ARG(ADD_C))
-#define X_REG_p_C          (ARG(ADD_REG)|ARG(ADD_C))
-#define X_NREG_p_C         (ARG(ADD_NREG)|ARG(ADD_C))
-#define X_NC               (ARG(ADD_NC))
-
-#define X_WR_m_REG_m_1_p_1 (ARG(ADD_WR)|ARG(SUB_REG)|ARG(SUB_1)|ARG(ADD_1))
-#define X_REG_m_WR_m_1_p_1 (ARG(ADD_REG)|ARG(SUB_WR)|ARG(SUB_1)|ARG(ADD_1))
-#define X_REG_p_WR_p_1     (ARG(ADD_REG)|ARG(ADD_WR)|ARG(ADD_1))
 #define X_WR_p_1           (ARG(ADD_WR)|ARG(ADD_1))
-#define X_NWR_p_1          (ARG(ADD_NWR)|ARG(ADD_1))
-#define X_REG_p_1          (ARG(ADD_REG)|ARG(ADD_1))
-#define X_NREG_p_1         (ARG(ADD_NREG)|ARG(ADD_1))
-
-#define X_WR_m_DIP_m_1_p_C (ARG(ADD_WR)|ARG(SUB_DIP)|ARG(SUB_1)|ARG(ADD_C))
-#define X_DIP_m_WR_m_1_p_C (ARG(ADD_DIP)|ARG(SUB_WR)|ARG(SUB_1)|ARG(ADD_C))
-#define X_DIP_p_WR_p_C     (ARG(ADD_DIP)|ARG(ADD_WR)|ARG(ADD_C))
-#define X_DIP_p_C          (ARG(ADD_DIP)|ARG(ADD_C))
-#define X_NDIP_p_C         (ARG(ADD_NDIP)|ARG(ADD_C))
-
-#define X_XWR_m_DIP_m_1_p_C (ARG(ADD_XWR)|ARG(SUB_DIP)|ARG(SUB_1)|ARG(ADD_C))
-#define X_DIP_m_XWR_m_1_p_C (ARG(ADD_DIP)|ARG(SUB_XWR)|ARG(SUB_1)|ARG(ADD_C))
-#define X_DIP_p_XWR_p_C     (ARG(ADD_DIP)|ARG(ADD_XWR)|ARG(ADD_C))
-#define X_XWR_p_C           (ARG(ADD_XWR)|ARG(ADD_C))
-#define X_NXWR_p_C          (ARG(ADD_NXWR)|ARG(ADD_C))
-
-#define X_DIP               (ARG(ADD_DIP))
-#define X_REG               (ARG(ADD_REG))
-#define X_REG_p_XWR_p_C     (ARG(ADD_REG)|ARG(ADD_XWR)|ARG(ADD_C))
-#define X_REG_p_DIP_p_C     (ARG(ADD_REG)|ARG(ADD_DIP)|ARG(ADD_C))
 
 enum op {
 	OP_NONE,
