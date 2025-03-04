@@ -85,7 +85,6 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 	lexer_register(lexer, "СЦЛ", KW_ROL);
 	lexer_register(lexer, "СЦП", KW_ROR);
 	lexer_register(lexer, "ВВОД", KW_INPUT);
-	lexer_register(lexer, "МЕТКИ", KW_LABELS);
 	lexer_register(lexer, "ОСТАНОВ", KW_BREAK);
 	lexer_register(lexer, "СТОП", KW_HALT);
 
@@ -132,7 +131,6 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 	lexer_register(lexer, "and", KW_AND);
 	lexer_register(lexer, "or", KW_OR);
 	lexer_register(lexer, "xor", KW_XOR);
-	lexer_register(lexer, "labels", KW_LABELS);
 	lexer_register(lexer, "break", KW_BREAK);
 	lexer_register(lexer, "halt", KW_HALT);
 

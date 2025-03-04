@@ -163,7 +163,6 @@ static void SeverePanic(struct parser *parser, int error)
 
 static int AddRegister(struct parser *parser, uint8_t id, int sub);
 
-static int Labels(struct parser *parser);
 static int Instruction(struct parser *parser);
 static int Label(struct parser *parser);
 static int Opcode(struct parser *parser);
@@ -181,68 +180,6 @@ static int Conditional(struct parser *parser);
 static int Goto(struct parser *parser);
 static int Input(struct parser *parser);
 static int Annotation(struct parser *parser);
-
-static int Labels(struct parser *parser)
-{
-	int second = 0, end = 0, word = 0, result = 1;
-
-	if (!Match(parser, KW_LABELS))
-		return 0;
-	do {
-		if (second) {
-			if (!Match(parser, ',')) {
-				if (!Match(parser, ';')) {
-					Panic(parser, X584ASM_COMMA_EXPECTED);
-					continue;
-				}
-				else {
-					end = 1;
-					break;
-				}
-			} else {
-				word = 0;
-			}
-		}
-
-		switch (parser->input) {
-		case RUNE_WORD:
-			if (parser->n_labels >= MAX_LABELS) {
-				SeverePanic(parser, X584ASM_TOO_MANY_LABELS);
-				continue;
-			}
-			else {
-				lexer_register(parser->lexer, parser->token,
-						RUNE_LABEL(parser->n_labels));
-				parser->n_labels++;
-			}
-			word = 1;
-			Consume(parser);
-			break;
-		case ';':
-			end = 1;
-			break;
-		case INPUT_EOF:
-			Error(parser->lexer->line, parser->lexer->col,
-				X584ASM_PREMATURE_EOF);
-			result = 0;
-			end = 1;
-			break;
-		default:
-			if (IS_RUNE_LABEL(parser->input)) {
-				Error(parser->lexer->line, parser->lexer->col,
-					X584ASM_LABEL_ALREADY_DEFINED);
-				Consume(parser);
-			}
-			else {
-				Panic(parser, X584ASM_WORD_EXPECTED);
-			}
-		}
-
-		second = 1;
-	} while (!end);
-
-	return result;
-}
 
 static int Instruction(struct parser *parser)
 {
@@ -820,33 +757,42 @@ static int Carry(struct parser *parser)
 	return result;
 }
 
+static int RegisterLabel(struct parser *parser)
+{
+	if (parser->n_labels >= MAX_LABELS) {
+		Error(parser->lexer->line, parser->lexer->col,
+			X584ASM_TOO_MANY_LABELS);
+		return 0;
+	}
+	else {
+		int label = parser->n_labels;
+		lexer_register(parser->lexer, parser->token,
+				RUNE_LABEL(label));
+		parser->n_labels++;
+		return label + LABEL_FIRST;
+	}
+}
+
 static int Label(struct parser *parser)
 {
 	int no_label = 0;
 	int label = 0;
 
-	if (!(label = MatchLabel(parser))) {
-		if (Match(parser, RUNE_WORD)) {
-			Error(parser->lexer->line, parser->lexer->col,
-				X584ASM_UNDEFINED_LABEL);
-			if (!Match(parser, ':')) {
-				SeverePanic(parser, X584ASM_COLON_EXPECTED);
-				return 0;
-			}
-
-		}
-		else {
-			return 0; // maybe not label
-		}
+	if (parser->input == RUNE_WORD) {
+		label = RegisterLabel(parser);
+		Consume(parser);
 	}
-	else {
-		program_set_label(parser->program, LABEL_ID(label), parser->address);
-
-		if (!Match(parser, ':')) {
-			SeverePanic(parser, X584ASM_COLON_EXPECTED);
-			return 0;
-		}
+	else if (!(label = MatchLabel(parser))) {
+		return 0;
 	}
+
+
+	if (!Match(parser, ':')) {
+		SeverePanic(parser, X584ASM_COLON_EXPECTED);
+		return 0;
+	}
+
+	program_set_label(parser->program, LABEL_ID(label), parser->address);
 
 	return 1;
 }
@@ -867,7 +813,11 @@ static int32_t GotoAddress(struct parser *parser)
 		Consume(parser);
 	}
 	else if (label = MatchLabel(parser)) {
-		label = LABEL_ID(label) + N_INSTRUCTIONS;
+		label = LABEL_ID(label) + LABEL_FIRST;
+	}
+	else if (parser->input == RUNE_WORD) {
+		label = RegisterLabel(parser);
+		Consume(parser);
 	}
 	else {
 		Error(parser->lexer->line, parser->lexer->col,
@@ -1172,7 +1122,6 @@ int parser_init(struct parser *parser, struct lexer *lexer, struct program *prog
 
 int parser_run(struct parser *parser)
 {
-	Labels(parser);
-	while (parser->input >= 0 && Instruction(parser));
+	while (parser->input != INPUT_EOF && Instruction(parser));
 	return parser->valid;
 }
