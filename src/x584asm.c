@@ -16,6 +16,12 @@
 #include <windows.h>
 #endif
 
+#define X584ASM_VERSION "v0.1.0"
+
+const char banner[] = "This is X584ASM, version "
+	X584ASM_VERSION
+	" (compiled " __DATE__ " " __TIME__ ")";
+
 int u8main(int argc, char **argv)
 {
 	struct reader reader = {0};
