@@ -202,6 +202,7 @@ static int Instruction(struct parser *parser)
 	if (parser->address >= N_INSTRUCTIONS) {
 		Error(parser->lexer->line, parser->lexer->col,
 			X584ASM_TOO_MANY_INSTRUCTIONS);
+		parser->valid = 0;
 		return 0;
 	}
 	Label(parser);
