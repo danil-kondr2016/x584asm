@@ -10,6 +10,10 @@ static int _is_newline(int32_t codepoint)
 	utf8proc_category_t category;
 	if (codepoint == '\n')
 		return 1;
+	if (codepoint == '\r')
+		return 1;
+	if (codepoint == '\f')
+		return 1;
 	if (codepoint == 0x85)
 		return 1;
 	category = utf8proc_category(codepoint);
@@ -238,9 +242,13 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			result = _number(lexer, token);
 			end = 1;
 			break;
-		case '\n':
 		case '\t':
+			lexer->line = lexer->input_line;
+			lexer->col = lexer->input_col;
 		case '\r':
+		case '\n':
+		case '\v':
+		case '\f':
 			lexer->input = INPUT_NOT_SAVED;
 			continue;
 		default:
@@ -255,6 +263,8 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 				end = 1;
 				break;
 			case UTF8PROC_CATEGORY_ZS:
+				lexer->line = lexer->input_line;
+				lexer->col = lexer->input_col;
 			case UTF8PROC_CATEGORY_ZL:
 			case UTF8PROC_CATEGORY_ZP:
 				lexer->input = INPUT_NOT_SAVED;
