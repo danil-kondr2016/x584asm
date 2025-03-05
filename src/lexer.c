@@ -28,6 +28,8 @@ static int32_t _l_getc(struct lexer *lexer)
 	if (_is_newline(lexer->input)) {
 		lexer->input_line++;
 		lexer->input_col = 1;
+		lexer->line = lexer->input_line;
+		lexer->col = lexer->input_col;
 	}
 	return lexer->input;
 }
