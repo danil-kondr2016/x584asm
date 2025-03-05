@@ -58,6 +58,7 @@ int u8main(int argc, char **argv)
 		fprintf(stderr, "! Fatal error: Input file not specified\n");
 		return 1;
 	}
+	printf("Input file: %s\n", input);
 
 	if (!output) {
 		const char *basename_p;
@@ -94,7 +95,18 @@ int u8main(int argc, char **argv)
 	lexer_init(&lexer, &reader);
 	parser_init(&parser, &lexer, &program);
 	if (parser_run(&parser)) {
-		return !program_output(&program, output);
+		int ret = program_output(&program, output);
+
+		if (!ret) {
+			puts("No output file.");
+		}
+		else {
+			printf("Output written on %s\n", output);
+		}
+		return !ret;
+	}
+	else {
+		puts("No output file.");
 	}
 
 	return 1;
