@@ -34,11 +34,15 @@ int u8main(int argc, char **argv)
 	char *output = NULL;
 	int option;
 
+	puts(banner);
 	optparse_init(&opt, argv);
-	while ((option = optparse(&opt, "ho::")) != -1) {
+	while ((option = optparse(&opt, "hvo::")) != -1) {
 		switch (option) {
 		case 'h':
-			printf("Usage: x584asm input [-o output]\n");
+			printf("Usage: x584asm [-h|-v] input [-o output]\n");
+			return 0;
+		case 'v':
+			puts("Copyright (c) Danila A. Kondratenko, 2025");
 			return 0;
 		case 'o':
 			output = opt.optarg;
@@ -56,11 +60,19 @@ int u8main(int argc, char **argv)
 	}
 
 	if (!output) {
-		const char *ext;
+		const char *basename_p;
+		char *basename;
 		size_t length;
 
-		if (cwk_path_has_extension(input)) {
-			cwk_path_get_extension(input, &ext, &length);
+		cwk_path_get_basename(input, &basename_p, &length);
+		basename = calloc(length + 1, sizeof(char));
+		if (!basename)
+			Die(X584ASM_FATAL_OUT_OF_MEMORY);
+		strncpy(basename, basename_p, length);
+
+		if (cwk_path_has_extension(basename)) {
+			const char *ext;
+			cwk_path_get_extension(basename, &ext, &length);
 			if (strcmp(ext, ".asm") != 0) {
 				fprintf(stderr, "! Fatal error: invalid extension\n");
 				return 1;
@@ -68,11 +80,12 @@ int u8main(int argc, char **argv)
 		}
 
 		size_t output_size = 
-			cwk_path_change_extension(input, "x584", NULL, 0);
+			cwk_path_change_extension(basename, "x584", NULL, 0);
 		output = calloc(output_size+1, sizeof(char));
 		if (!output)
 			Die(X584ASM_FATAL_OUT_OF_MEMORY);
-		cwk_path_change_extension(input, "x584", output, output_size+1);
+		cwk_path_change_extension(basename, "x584", output, output_size+1);
+		free(basename);
 	}
 
 	if (!reader_open(&reader, input)) {
