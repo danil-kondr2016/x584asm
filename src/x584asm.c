@@ -71,15 +71,6 @@ int u8main(int argc, char **argv)
 			Die(X584ASM_FATAL_OUT_OF_MEMORY);
 		strncpy(basename, basename_p, length);
 
-		if (cwk_path_has_extension(basename)) {
-			const char *ext;
-			cwk_path_get_extension(basename, &ext, &length);
-			if (strcmp(ext, ".asm") != 0) {
-				fprintf(stderr, "! Fatal error: invalid extension\n");
-				return 1;
-			}
-		}
-
 		size_t output_size = 
 			cwk_path_change_extension(basename, "x584", NULL, 0);
 		output = calloc(output_size+1, sizeof(char));
