@@ -860,11 +860,23 @@ static int Conditional(struct parser *parser)
 	else if (Match(parser, KW_XWR3)) { flag = KW_XWR3; }
 	else if (Match(parser, KW_A15)) { flag = KW_A15; }
 	else if (Match(parser, KW_B15)) { flag = KW_B15; }
+	else if (Match(parser, KW_SHL1)) { flag = KW_SHL1; }
+	else if (Match(parser, KW_SHL2)) { flag = KW_SHL2; }
+	else if (Match(parser, KW_SHR1)) { flag = KW_SHR1; }
+	else if (Match(parser, KW_SHR2)) { flag = KW_SHR2; }
 	else if (Match(parser, '!')) {
 		if (Match(parser, KW_SHL1)) { flag = ~KW_SHL1; }
 		else if (Match(parser, KW_SHL2)) { flag = ~KW_SHL2; }
 		else if (Match(parser, KW_SHR1)) { flag = ~KW_SHR1; }
 		else if (Match(parser, KW_SHR2)) { flag = ~KW_SHR2; }
+		else if (Match(parser, KW_C) || Match(parser, KW_CO3)) { flag = ~KW_CO3; }
+		else if (Match(parser, KW_CO2)) { flag = ~KW_CO2; }
+		else if (Match(parser, KW_CO1)) { flag = ~KW_CO1; }
+		else if (Match(parser, KW_CO0)) { flag = ~KW_CO0; }
+		else if (Match(parser, KW_XWR0)) { flag = ~KW_XWR0; }
+		else if (Match(parser, KW_XWR3)) { flag = ~KW_XWR3; }
+		else if (Match(parser, KW_A15)) { flag = ~KW_A15; }
+		else if (Match(parser, KW_B15)) { flag = ~KW_B15; }
 		else {
 			Panic(parser, X584ASM_FLAG_EXPECTED);
 			return 0;
