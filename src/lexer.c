@@ -90,7 +90,7 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 	lexer_register(lexer, "САП", KW_SAR);
 	lexer_register(lexer, "СЦЛ", KW_ROL);
 	lexer_register(lexer, "СЦП", KW_ROR);
-	lexer_regsiter(lexer, "и", KW_AND);
+	lexer_register(lexer, "и", KW_AND);
 	lexer_register(lexer, "или", KW_OR);
 	lexer_register(lexer, "искл_или", KW_XOR);
 	lexer_register(lexer, "ВВОД", KW_INPUT);
@@ -119,10 +119,10 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 	lexer_register(lexer, "CO0", KW_CO0);
 	lexer_register(lexer, "C", KW_C);
 	lexer_register(lexer, "ALUCIN", KW_ALUCIN);
-	lexer_regsiter(lexer, "ALUCOUT", KW_CO3);
-	lexer_regsiter(lexer, "ALUCOUT0", KW_CO0);
-	lexer_regsiter(lexer, "ALUCOUT1", KW_CO1);
-	lexer_regsiter(lexer, "ALUCOUT2", KW_CO2);
+	lexer_register(lexer, "ALUCOUT", KW_CO3);
+	lexer_register(lexer, "ALUCOUT0", KW_CO0);
+	lexer_register(lexer, "ALUCOUT1", KW_CO1);
+	lexer_register(lexer, "ALUCOUT2", KW_CO2);
 	lexer_register(lexer, "C2", KW_CO2);
 	lexer_register(lexer, "C1", KW_CO1);
 	lexer_register(lexer, "C0", KW_CO0);
@@ -232,6 +232,7 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			else if (lexer->input == '/') {
 				lexer->input = INPUT_NOT_SAVED;
 				_skip_singleline_comment(lexer);
+			}
 			else {
 				result = '/';
 				end = 1;
@@ -270,7 +271,7 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 		case '\n':
 		case '\v':
 		case '\f':
-		case 0xFEFF; // ZERO-WIDTH NO-BREAK SPACE
+		case 0xFEFF: // ZERO-WIDTH NO-BREAK SPACE
 			lexer->input = INPUT_NOT_SAVED;
 			continue;
 		default:
