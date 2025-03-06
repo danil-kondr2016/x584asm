@@ -14,9 +14,7 @@
  *
  * program = [label-decl] {instruction}
  *
- * label-decl = <labels> word {',' word} ';'
- *
- * instruction = [<label> ':'] opcode [ ',' operator [ annotation ] ] ';'
+ * instruction = [<label> ':'] opcode [ operator [ annotation ] ]
  *
  * opcode = [break] command 
  *
@@ -202,11 +200,14 @@ static int Instruction(struct parser *parser)
 	if (parser->address >= N_INSTRUCTIONS) {
 		Error(parser->lexer->line, parser->lexer->col,
 			X584ASM_TOO_MANY_INSTRUCTIONS);
-		parser->valid = 0;
+		parser->is_program_valid = false;
 		return 0;
 	}
 	Label(parser);
 
+	bool valid_opcode = false;
+	bool valid_annotation = false;
+	bool valid_operator = false;
 	state = 1;
 	do {
 		switch (state) {
@@ -214,68 +215,39 @@ static int Instruction(struct parser *parser)
 			ret = Opcode(parser);
 			if (!ret)
 				break;
+			valid_opcode = true;
 			state = 2;
 			break;
 		case 2:
-			if (Match(parser, ';')) {
-				state = 0;
-				break;
-			}
-			else if (Match(parser, ',')) {
-				ret = Operator(parser);
-				if (!ret) {
-					ret = Annotation(parser);
-					if (!ret)
-						break;
-					else
-						state = 4;
-				}
-				else {
-					state = 3;
-				}
-			}
-			else {
-				ret = 0;
-				break;
-			}
-			break;
-		case 3:
-			if (Match(parser, ';')) {
-				state = 0;
-				break;
-			}
-			else if (Match(parser, ',')) {
+			ret = Operator(parser);
+			if (!ret) {
 				ret = Annotation(parser);
 				if (!ret)
 					break;
-				state = 0;
+				else
+					state = 4;
 			}
 			else {
-				ret = 0;
-				break;
+				state = 3;
 			}
 			break;
+		case 3:
+			ret = Annotation(parser);
+			if (!ret)
+				break;
+			state = 0;
+			break;
 		case 4:
-			if (Match(parser, ';')) {
-				state = 0;
+			ret = Operator(parser);
+			if (!ret)
 				break;
-			}
-			else if (Match(parser, ',')) {
-				ret = Operator(parser);
-				if (!ret)
-					break;
-				state = 0;
-			}
-			else {
-				ret = 0;
-				break;
-			}
+			state = 0;
 			break;
 		}
 	}
 	while (ret && state);
 
-	if (!ret) {
+	if (!ret && !valid_opcode) {
 		parser->invalid_instruction = true;
 		if (!parser->error) {
 			parser->error = X584ASM_SYNTAX_ERROR;
@@ -284,9 +256,6 @@ static int Instruction(struct parser *parser)
 		else if (parser->error != X584ASM_INVALID_OPCODE)
 			SeverePanic(parser, parser->error);
 	}
-
-	if (parser->input == ';')
-		Consume(parser);
 
 	if (!GenerateOpcode(parser)) {
 		if (!parser->error) {
@@ -383,6 +352,7 @@ static int Term(struct parser *parser)
 	else if (Match(parser, KW_WR)) { result = REG_WR; }
 	else if (Match(parser, KW_XWR)) { result = REG_XWR; }
 	else if (Match(parser, KW_DIP)) { result = REG_DIP; }
+	else if (Match(parser, KW_ALUCIN)) { result = REG_C; }
 	else if (Match(parser, KW_C)) { result = REG_C; }
 	else if (parser->input == RUNE_NUMBER && parser->token[0] == '1' && !parser->token[1])
 		{ result = REG_1; Consume(parser); }
@@ -1006,21 +976,19 @@ static int Annotation(struct parser *parser)
 	sds temp;
 	int n = 0;
 
-
 	if (!annotation) Die(X584ASM_OUT_OF_MEMORY);
-	while (parser->input == RUNE_STRING) { 
+	if (parser->input == RUNE_ANNOTATION) { 
 		temp = sdscatsds(annotation, parser->token);
 		if (!temp) Die(X584ASM_OUT_OF_MEMORY);
 		annotation = temp;
 		Consume(parser);
+		program_move_annotation(parser->program, parser->address, annotation);
 	}
-	if (Match(parser, INPUT_ERROR)) {
-		sdsfree(annotation);
-		SeverePanic(parser, 0);
+	else {
 		return 0;
 	}
 
-	program_move_annotation(parser->program, parser->address, annotation);
+
 	return 1;
 }
 
