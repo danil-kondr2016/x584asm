@@ -34,6 +34,7 @@ enum keyword_type {
 	KW_SHL, KW_SHR, KW_SAL, KW_SAR, KW_ROL, KW_ROR,
 	KW_INPUT, KW_AND, KW_OR, KW_XOR,
 	KW_BREAK, KW_HALT,
+	KW_ALUCIN,
 };
 
 struct keyword {
