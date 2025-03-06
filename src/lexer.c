@@ -174,20 +174,21 @@ int lexer_register(struct lexer *lexer, char *word, int32_t value)
 	return lexer->keywords_count++;
 }
 
-static void _skip_comment(struct lexer *lexer);
+static void _skip_multiline_comment(struct lexer *lexer);
+static void _skip_singleline_comment(struct lexer *lexer);
 
 typedef int32_t (*codepoint_cb)(struct lexer *lexer, sds *token);
 static int32_t _word_cb(struct lexer *lexer, sds *token);
 static int32_t _number_cb(struct lexer *lexer, sds *token);
 static int32_t _hex_cb(struct lexer *lexer, sds *token);
-static int32_t _string_cb(struct lexer *lexer, sds *token);
+static int32_t _annotation_cb(struct lexer *lexer, sds *token);
 
 static int32_t _collect(struct lexer *lexer, sds *token, codepoint_cb cb);
 static int32_t _word(struct lexer *lexer, sds *token);
 static int32_t _number(struct lexer *lexer, sds *token);
 static int32_t _number0(struct lexer *lexer, sds *token);
 static int32_t _hex(struct lexer *lexer, sds *token);
-static int32_t _string(struct lexer *lexer, sds *token);
+static int32_t _annotation(struct lexer *lexer, sds *token);
 
 int32_t lexer_next(struct lexer *lexer, sds *token)
 {
@@ -222,19 +223,24 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 				end = 1;
 			}
 			break;
-		case '(':
+		case '/':
 			_l_getc(lexer);
 			if (lexer->input == '*') {
 				lexer->input = INPUT_NOT_SAVED;
-				_skip_comment(lexer);
+				_skip_multiline_comment(lexer);
 			}
+			else if (lexer->input == '/') {
+				lexer->input = INPUT_NOT_SAVED;
+				_skip_singleline_comment(lexer);
 			else {
-				result = '(';
+				result = '/';
 				end = 1;
 			}
 			break;
-		case '"':
-			result = _string(lexer, token);
+		case ';':
+		case '#':
+			lexer->input = INPUT_NOT_SAVED;
+			result = _annotation(lexer, token);
 			end = 1;
 			break;
 		case '0':
@@ -296,7 +302,7 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 	return result;
 }
 
-static void _skip_comment(struct lexer *lexer)
+static void _skip_multiline_comment(struct lexer *lexer)
 {
 	int end = 0;
 	do {
@@ -304,11 +310,27 @@ static void _skip_comment(struct lexer *lexer)
 			_l_getc(lexer);
 		if (lexer->input == '*') {
 			_l_getc(lexer);
-			if (lexer->input == ')') {
+			if (lexer->input == '/') {
 				end = 1;
 			}
 		}
 		lexer->input = INPUT_NOT_SAVED;
+	}
+	while (!end);
+}
+
+static void _skip_singleline_comment(struct lexer *lexer)
+{
+	int end = 0;
+	do {
+		if (lexer->input == INPUT_NOT_SAVED)
+			_l_getc(lexer);
+		if (_is_newline(lexer->input)) {
+			end = 1;
+		}
+		else {
+			lexer->input = INPUT_NOT_SAVED;
+		}
 	}
 	while (!end);
 }
@@ -407,8 +429,7 @@ static int32_t _hex_cb(struct lexer *lexer, sds *token)
 	}
 }
 
-static int32_t _unicode(struct lexer *lexer, sds *token, int n);
-static int32_t _string_cb(struct lexer *lexer, sds *token)
+static int32_t _annotation_cb(struct lexer *lexer, sds *token)
 {
 	int32_t result;
 	if (lexer->input == INPUT_NOT_SAVED)
@@ -416,67 +437,8 @@ static int32_t _string_cb(struct lexer *lexer, sds *token)
 
 	result = lexer->input;
 	lexer->input = INPUT_NOT_SAVED;
-	switch (result) {
-	case '\\':
-		_l_getc(lexer);
-		result = lexer->input;
-		lexer->input = INPUT_NOT_SAVED;
-		switch (result) {
-		case 'r': return '\r';
-		case 'n': return '\n';
-		case 't': return '\t';
-		case 'v': return '\v';
-		case 'b': return '\b';
-		case 'a': return '\a';
-		case 'f': return '\f';
-		case '\\': return '\\';
-		case '\'': return '\'';
-		case '"': return '"';
-		case 'u': return _unicode(lexer, token, 4);
-		case 'U': return _unicode(lexer, token, 8);
-		default:
-			  return Error(lexer->input_line, lexer->input_col, 
-					  X584ASM_INVALID_ESCAPE_SEQUENCE);
-		}
-		break;
-	case '"':
+	if (_is_newline(result))
 		return INPUT_EOF;
-	case '\n':
-		return Error(lexer->input_line, lexer->input_col, 
-				X584ASM_PREMATURE_END_OF_LINE);
-	default:
-		return result;
-	}	
-}
-
-static int32_t _unicode(struct lexer *lexer, sds *token, int n)
-{
-	int32_t result = 0;
-	int32_t buf_pos;
-
-	for (int i = 0; i < n; i++) {
-		_l_getc(lexer);
-
-		result <<= 4;
-		switch (lexer->input) {
-		case '0': case '1': case '2': case '3':
-		case '4': case '5': case '6': case '7':
-		case '8': case '9':
-			result += (lexer->input) - '0';
-			break;
-		case 'A': case 'B': case 'C': case 'D':
-		case 'E': case 'F':
-			result += (lexer->input) - 'A' + 10;
-			break;
-		case 'a': case 'b': case 'c': case 'd':
-		case 'e': case 'f':
-			result += (lexer->input) - 'a' + 10;
-			break;
-		default:
-			return Error(lexer->input_line, lexer->input_col, 
-					X584ASM_INVALID_ESCAPE_SEQUENCE);
-		}
-	}
 	return result;
 }
 
@@ -563,12 +525,12 @@ static int32_t _number0(struct lexer *lexer, sds *token)
 	return RUNE_NUMBER;
 }
 
-static int32_t _string(struct lexer *lexer, sds *token)
+static int32_t _annotation(struct lexer *lexer, sds *token)
 {
 	lexer->input = INPUT_NOT_SAVED;
-	if (_collect(lexer, token, _string_cb) == INPUT_ERROR)
+	if (_collect(lexer, token, _annotation_cb) == INPUT_ERROR)
 		return INPUT_ERROR;
-	return RUNE_STRING;
+	return RUNE_ANNOTATION;
 }
 
 
