@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <sds.h>
 #include "lexer.h"
@@ -124,12 +125,13 @@ struct parser {
 	uint8_t reg;
 	uint8_t arg1, arg2;
 	uint8_t op;
-	uint8_t brk, carry, invalid;
-	uint8_t valid;
+	uint8_t carry;
+	bool brk                 : 1;
+	bool invalid_instruction : 1;
+	bool is_program_valid    : 1;
 };
 
-int parser_init(struct parser *parser, struct lexer *lexer, struct program *program);
-int parser_run(struct parser *parser);
-int parser_output(struct parser *parser, char *u8path);
+bool parser_init(struct parser *parser, struct lexer *lexer, struct program *program);
+bool parser_run(struct parser *parser);
 
 #endif

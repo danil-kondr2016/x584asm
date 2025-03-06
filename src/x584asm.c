@@ -86,7 +86,7 @@ int u8main(int argc, char **argv)
 	lexer_init(&lexer, &reader);
 	parser_init(&parser, &lexer, &program);
 	if (parser_run(&parser)) {
-		int ret = program_output(&program, output);
+		bool ret = program_output(&program, output);
 
 		if (!ret) {
 			puts("No output file.");
@@ -94,7 +94,7 @@ int u8main(int argc, char **argv)
 		else {
 			printf("Output written on %s\n", output);
 		}
-		return !ret;
+		return ret ? 0 : 1;
 	}
 	else {
 		puts("No output file.");

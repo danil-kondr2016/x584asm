@@ -194,7 +194,7 @@ static int Instruction(struct parser *parser)
 	parser->brk = 0;
 	parser->carry = CARRY_UNUSED;
 	parser->error = 0;
-	parser->invalid = 0;
+	parser->invalid_instruction = false;
 
 	if (parser->input == INPUT_EOF) {
 		return 0;
@@ -276,7 +276,7 @@ static int Instruction(struct parser *parser)
 	while (ret && state);
 
 	if (!ret) {
-		parser->invalid = 1;
+		parser->invalid_instruction = true;
 		if (!parser->error) {
 			parser->error = X584ASM_SYNTAX_ERROR;
 			SeverePanic(parser, X584ASM_SYNTAX_ERROR);
@@ -330,10 +330,10 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	}
 
 	if ((flag > -1) && parser->arg_add & (1 << flag)) {
-		parser->invalid = 1;
+		parser->invalid_instruction = true;
 	}
 	else if (id == REG_INVALID) {
-		parser->invalid = 1;
+		parser->invalid_instruction = true;
 		parser->error = X584ASM_INVALID_OPCODE;
 	}
 	else {
@@ -344,7 +344,7 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 		parser->arg_add |= (1 << flag);
 	}
 
-	return !parser->invalid;
+	return !parser->invalid_instruction;
 }
 
 static int Variable(struct parser *parser)
@@ -532,7 +532,7 @@ static int Opcode(struct parser *parser)
 		}
 
 		if (!ret) {
-			if (parser->invalid)
+			if (parser->invalid_instruction)
 				Panic(parser, X584ASM_INVALID_OPCODE);
 			else
 				SeverePanic(parser, X584ASM_INVALID_OPCODE);
@@ -722,7 +722,7 @@ static int ShiftExpr(struct parser *parser)
 		parser->carry = CARRY_VALUE_0;
 	}
 	else {
-		parser->invalid = 1;
+		parser->invalid_instruction = true;
 		Error(parser->lexer->line, parser->lexer->col,
 				X584ASM_INVALID_OPCODE);
 	}
@@ -1082,15 +1082,15 @@ static int GenerateOpcode(struct parser *parser)
 	}
 
 	if (opcode == -1) {
-		parser->invalid = 1;
+		parser->invalid_instruction = true;
 	}
 	if (parser->op == OP_HALT) {
-		parser->brk = 1;
+		parser->brk = true;
 	}
 
-	if (parser->invalid) {
+	if (parser->invalid_instruction) {
 		program_set_opcode(parser->program, parser->address, 0777, 1, 0);
-		parser->valid = 0;
+		parser->is_program_valid = false;
 		return 0;
 	}
 	else {
@@ -1100,7 +1100,7 @@ static int GenerateOpcode(struct parser *parser)
 	return 1;
 }
 
-int parser_init(struct parser *parser, struct lexer *lexer, struct program *program)
+bool parser_init(struct parser *parser, struct lexer *lexer, struct program *program)
 {
 	if (!parser)
 		return 0;
@@ -1117,13 +1117,13 @@ int parser_init(struct parser *parser, struct lexer *lexer, struct program *prog
 		= INPUT_NOT_SAVED;
 	program_init(program);
 	parser->program = program;
-	parser->valid = 1;
+	parser->is_program_valid = true;
 
 	return 1;
 }
 
-int parser_run(struct parser *parser)
+bool parser_run(struct parser *parser)
 {
 	while (parser->input != INPUT_EOF && Instruction(parser));
-	return parser->valid;
+	return parser->is_program_valid;
 }
