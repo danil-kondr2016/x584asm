@@ -104,8 +104,8 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 	lexer_register(lexer, "RF7", KW_RF7);
 	lexer_register(lexer, "WR", KW_WR);
 	lexer_register(lexer, "XWR", KW_XWR);
-	lexer_register(lexer, "DIP", KW_DIP);
-	lexer_register(lexer, "DOP", KW_DOP);
+	lexer_register(lexer, "DI", KW_DIP);
+	lexer_register(lexer, "DO", KW_DOP);
 	lexer_register(lexer, "IF", KW_IF);
 	lexer_register(lexer, "THEN", KW_THEN);
 	lexer_register(lexer, "ELSE", KW_ELSE);
