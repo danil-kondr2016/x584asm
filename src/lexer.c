@@ -249,6 +249,7 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 		case '\n':
 		case '\v':
 		case '\f':
+		case 0xFEFF; // ZERO-WIDTH NO-BREAK SPACE
 			lexer->input = INPUT_NOT_SAVED;
 			continue;
 		default:
