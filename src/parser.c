@@ -1016,7 +1016,11 @@ static int GenerateOpcode(struct parser *parser)
 		if (parser->arg2 != _opcodes[i].arg2)
 			continue;
 		if (parser->carry != _opcodes[i].carry) {
-			if (_opcodes[i].carry != CARRY_INDEFINITE)
+			if (_opcodes[i].carry == CARRY_UNUSED)
+				continue;
+			if (_opcodes[i].carry == CARRY_VALUE_0 && parser->carry == CARRY_VALUE_1)
+				continue;
+			if (_opcodes[i].carry == CARRY_VALUE_1 && parser->carry == CARRY_VALUE_0)
 				continue;
 		}
 
