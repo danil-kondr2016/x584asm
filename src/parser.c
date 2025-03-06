@@ -62,7 +62,6 @@ static int32_t Consume(struct parser *parser);
 static int Back(struct parser *parser);
 static int Match(struct parser *parser, int32_t rune);
 static void Panic(struct parser *parser, int error);
-static void SeverePanic(struct parser *parser, int error);
 static int GenerateOpcode(struct parser *parser);
 
 static int32_t Consume(struct parser *parser)
@@ -141,21 +140,58 @@ static void Panic(struct parser *parser, int error)
 {
 	if (error)
 		Error(parser->lexer->line, parser->lexer->col, error);
-	while (parser->input != ';' && parser->input != INPUT_EOF
-			&& parser->input != ','
-			&& parser->input != ':')
+	while (parser->input != RUNE_ASSIGN
+			&& parser->input != ':' // Maybe label
+			&& parser->input != '(' // Maybe carry, shift or (WR,XWR)
+			&& parser->input != KW_BREAK // Start of instruction
+			&& parser->input != KW_HALT // Opcode
+			&& parser->input != KW_NOP // Opcode
+			&& parser->input != INPUT_EOF)
 	{
 		Consume(parser);
+		if (parser->input == '(' 
+			&& (parser->prev_input == KW_SHL || parser->prev_input == KW_SHR
+			|| parser->prev_input == KW_SAL || parser->input == KW_SAR
+			|| parser->prev_input == KW_ROL || parser->input == KW_ROR))
+		{
+			// Guaranteed to be shift, skip it
+			Consume(parser);
+		}
 	}
-}
 
-static void SeverePanic(struct parser *parser, int error)
-{
-	if (error)
-		Error(parser->lexer->line, parser->lexer->col, error);
-	while (parser->input != ';' && parser->input != INPUT_EOF)
-	{
+	switch (parser->input) {
+	case ':': // Maybe label
+		if (parser->prev_input == RUNE_WORD || IS_RUNE_LABEL(parser->prev_input))
+			Back(parser);
+		else 
+			Consume(parser);
+		break;
+	case RUNE_ASSIGN: // Maybe assign
+		if (parser->prev_input == KW_RF0
+				|| parser->prev_input == KW_RF1
+				|| parser->prev_input == KW_RF2
+				|| parser->prev_input == KW_RF3
+				|| parser->prev_input == KW_RF4
+				|| parser->prev_input == KW_RF5
+				|| parser->prev_input == KW_RF6
+				|| parser->prev_input == KW_RF7
+				|| parser->prev_input == KW_WR
+				|| parser->prev_input == KW_XWR
+				|| parser->prev_input == KW_DOP)
+			Back(parser);
+		else
+			Consume(parser);
+		break;
+	case '(':
 		Consume(parser);
+		if (parser->input == KW_C) {
+			while (parser->input != ')') Consume(parser);
+			Consume(parser);
+		}
+		else {
+			Back(parser); // maybe (РР,РРР)
+		}
+		break;
 	}
 }
 
@@ -251,10 +287,10 @@ static int Instruction(struct parser *parser)
 		parser->invalid_instruction = true;
 		if (!parser->error) {
 			parser->error = X584ASM_SYNTAX_ERROR;
-			SeverePanic(parser, X584ASM_SYNTAX_ERROR);
+			Panic(parser, X584ASM_SYNTAX_ERROR);
 		}
 		else if (parser->error != X584ASM_INVALID_OPCODE)
-			SeverePanic(parser, parser->error);
+			Panic(parser, parser->error);
 	}
 
 	if (!GenerateOpcode(parser)) {
@@ -502,10 +538,6 @@ static int Opcode(struct parser *parser)
 		}
 
 		if (!ret) {
-			if (parser->invalid_instruction)
-				Panic(parser, X584ASM_INVALID_OPCODE);
-			else
-				SeverePanic(parser, X584ASM_INVALID_OPCODE);
 			return 0;
 		}
 		else {
@@ -549,7 +581,7 @@ static int AddLogExpr(struct parser *parser)
 
 			term = Term(parser);
 			if (!term) {
-				SeverePanic(parser, X584ASM_TERM_EXPECTED);
+				Panic(parser, X584ASM_TERM_EXPECTED);
 				return 0;
 			}
 			AddRegister(parser, term, sub);
@@ -573,14 +605,14 @@ static int AddLogExpr(struct parser *parser)
 				parser->op = OP_XOR;
 			}
 			else {
-				SeverePanic(parser, X584ASM_OP_EXPECTED);
+				Panic(parser, X584ASM_OP_EXPECTED);
 				return 0;
 			}
 			Consume(parser);
 
 			term = Term(parser);
 			if (!term) {
-				SeverePanic(parser, X584ASM_TERM_EXPECTED);
+				Panic(parser, X584ASM_TERM_EXPECTED);
 				return 0;
 			}
 
@@ -613,7 +645,7 @@ static int NXorExpr(struct parser *parser)
 		
 	term = Term(parser);
 	if (!term) {
-		SeverePanic(parser, X584ASM_TERM_EXPECTED);
+		Panic(parser, X584ASM_TERM_EXPECTED);
 		return 0;
 	}
 	parser->arg1 = term;
@@ -622,19 +654,19 @@ static int NXorExpr(struct parser *parser)
 		parser->op = OP_NXOR;
 	}
 	else {
-		SeverePanic(parser, X584ASM_XOR_EXPECTED);
+		Panic(parser, X584ASM_XOR_EXPECTED);
 		return 0;
 	}
 
 	term = Term(parser);
 	if (!term) {
-		SeverePanic(parser, X584ASM_TERM_EXPECTED);
+		Panic(parser, X584ASM_TERM_EXPECTED);
 		return 0;
 	}
 	parser->arg2 = term;
 
 	if (!Match(parser, ')')) {
-		SeverePanic(parser, X584ASM_RPAR_EXPECTED);
+		Panic(parser, X584ASM_RPAR_EXPECTED);
 		return 0;
 	}
 
@@ -667,17 +699,17 @@ static int ShiftExpr(struct parser *parser)
 	parser->op = shift_op;
 
 	if (!Match(parser, '(')) {
-		SeverePanic(parser, X584ASM_LPAR_EXPECTED);
+		Panic(parser, X584ASM_LPAR_EXPECTED);
 		return 0;
 	}
 
 	if (!AddLogExpr(parser)) {
-		SeverePanic(parser, X584ASM_INVALID_OPCODE);
+		Panic(parser, X584ASM_INVALID_OPCODE);
 		return 0;
 	}
 
 	if (!Match(parser, ')')) {
-		SeverePanic(parser, X584ASM_LPAR_EXPECTED);
+		Panic(parser, X584ASM_LPAR_EXPECTED);
 		return 0;
 	}
 
@@ -763,7 +795,7 @@ static int Label(struct parser *parser)
 
 
 	if (!Match(parser, ':')) {
-		SeverePanic(parser, X584ASM_COLON_EXPECTED);
+		Panic(parser, X584ASM_COLON_EXPECTED);
 		return 0;
 	}
 
@@ -834,27 +866,27 @@ static int Conditional(struct parser *parser)
 		else if (Match(parser, KW_SHR1)) { flag = ~KW_SHR1; }
 		else if (Match(parser, KW_SHR2)) { flag = ~KW_SHR2; }
 		else {
-			SeverePanic(parser, X584ASM_FLAG_EXPECTED);
+			Panic(parser, X584ASM_FLAG_EXPECTED);
 			return 0;
 		}
 	}
 	else {
-		SeverePanic(parser, X584ASM_FLAG_EXPECTED);
+		Panic(parser, X584ASM_FLAG_EXPECTED);
 		return 0;
 	}
 	if (!Match(parser, KW_THEN)) {
-		SeverePanic(parser, X584ASM_THEN_EXPECTED);
+		Panic(parser, X584ASM_THEN_EXPECTED);
 		return 0;
 	}
 	label_then = GotoAddress(parser);
 	if (!label_then) {
-		SeverePanic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
+		Panic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
 		return 0;
 	}
 	if (Match(parser, KW_ELSE)) {
 		label_else = GotoAddress(parser);
 		if (!label_else) {
-			SeverePanic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
+			Panic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
 			return 0;
 		}
 	}
@@ -868,7 +900,7 @@ static int Goto(struct parser *parser)
 	int32_t label_to = LABEL_NEXT;
 	label_to = GotoAddress(parser);
 	if (!label_to) {
-		SeverePanic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
+		Panic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
 		return 0;
 	}
 	program_set_goto(parser->program, parser->address, label_to);
@@ -885,7 +917,7 @@ static int Input(struct parser *parser)
 		if (sdslen(parser->token) == 16) {
 			long val = strtol(parser->token, NULL, 2);
 			if (!val && strcmp(parser->token, "0000000000000000") != 0) {
-				SeverePanic(parser, X584ASM_INVALID_NUMBER);
+				Panic(parser, X584ASM_INVALID_NUMBER);
 				return 0;
 			}
 			input_num = val; // by definition val <= 65535 and val > 0
@@ -895,7 +927,7 @@ static int Input(struct parser *parser)
 			long vals[4], n = 0;
 			do {
 				if (n == 4) {
-					SeverePanic(parser, X584ASM_INVALID_NUMBER);
+					Panic(parser, X584ASM_INVALID_NUMBER);
 					return 0;
 				}
 				vals[n] = strtol(parser->token, NULL, 2);
@@ -914,7 +946,7 @@ static int Input(struct parser *parser)
 				input_num = strtol(parser->token, NULL, 10);
 				// Number is in range of 0 to 9999.
 				if (!input_num && strcmp(parser->token, "0000") != 0) {
-					SeverePanic(parser, X584ASM_INVALID_NUMBER);
+					Panic(parser, X584ASM_INVALID_NUMBER);
 					return 0;
 				}
 			}
@@ -929,7 +961,7 @@ static int Input(struct parser *parser)
 			}
 			else {
 				// n == 2 || n == 3. Error
-				SeverePanic(parser, X584ASM_INVALID_NUMBER);
+				Panic(parser, X584ASM_INVALID_NUMBER);
 				return 0;
 			}
 		}
