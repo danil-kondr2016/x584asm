@@ -251,7 +251,7 @@ static int Instruction(struct parser *parser)
 			ret = Opcode(parser);
 			if (!ret)
 				break;
-			valid_opcode = true;
+			valid_opcode = !parser->invalid_instruction;
 			state = 2;
 			break;
 		case 2:
@@ -528,8 +528,7 @@ static int Opcode(struct parser *parser)
 		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
 		return 1;
 	}
-	else {
-		
+	else {	
 		if (parser->input == '(') {
 			ret = XAssign(parser);
 		}
@@ -738,8 +737,10 @@ static int Carry(struct parser *parser)
 
 	if (!Match(parser, '('))
 		return 0;
-	if (!Match(parser, KW_C))
+	if (!Match(parser, KW_C)) {
+		Back(parser); // restore '('
 		return 0;
+	}
 	if (!Match(parser, '='))
 		return 0;
 	if (parser->input == RUNE_NUMBER) {
