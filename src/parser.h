@@ -117,6 +117,9 @@ struct parser {
 	int32_t input;
 	int32_t next_input;
 
+	int prev_line, line, next_line;
+	int prev_col, col, next_col;
+
 	int32_t n_labels;
 	int32_t address;
 	int32_t error;

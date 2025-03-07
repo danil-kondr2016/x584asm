@@ -69,10 +69,16 @@ static int32_t Consume(struct parser *parser)
 	if (parser->next_input != INPUT_NOT_SAVED) {
 		parser->prev_input = parser->input;
 		parser->prev_token = parser->token;
+		parser->prev_line = parser->line;
+		parser->prev_col = parser->col;
 		parser->input = parser->next_input;
 		parser->token = parser->next_token;
+		parser->line = parser->next_line;
+		parser->col = parser->next_col;
 		parser->next_input = INPUT_NOT_SAVED;
 		parser->next_token = NULL;
+		parser->next_line = 0;
+		parser->next_col = 0;
 		return parser->input;
 	}
 
@@ -84,6 +90,8 @@ static int32_t Consume(struct parser *parser)
 	parser->prev_input = parser->input;
 	parser->token = NULL;
 	parser->input = lexer_next(parser->lexer, &parser->token);
+	parser->line = parser->lexer->line;
+	parser->col = parser->lexer->col;
 	return parser->input;
 }
 
@@ -96,10 +104,16 @@ static int Back(struct parser *parser)
 		}
 		parser->next_input = parser->input;
 		parser->next_token = parser->token;
+		parser->next_line = parser->line;
+		parser->next_col = parser->col;
 		parser->input = parser->prev_input;
 		parser->token = parser->prev_token;
+		parser->line = parser->prev_line;
+		parser->col = parser->prev_col;
 		parser->prev_input = INPUT_NOT_SAVED;
 		parser->prev_token = NULL;
+		parser->prev_line = 0;
+		parser->prev_col = 0;
 		return 1;
 	}
 
@@ -139,7 +153,7 @@ static int MatchLabel(struct parser *parser)
 static void Panic(struct parser *parser, int error)
 {
 	if (error)
-		Error(parser->lexer->line, parser->lexer->col, error);
+		Error(parser->line, parser->col, error);
 	while (parser->input != RUNE_ASSIGN
 			&& parser->input != ':' // Maybe label
 			&& parser->input != '(' // Maybe carry, shift or (WR,XWR)
@@ -234,7 +248,7 @@ static int Instruction(struct parser *parser)
 		return 0;
 	}
 	if (parser->address >= N_INSTRUCTIONS) {
-		Error(parser->lexer->line, parser->lexer->col,
+		Error(parser->line, parser->col,
 			X584ASM_TOO_MANY_INSTRUCTIONS);
 		parser->is_program_valid = false;
 		return 0;
@@ -295,7 +309,7 @@ static int Instruction(struct parser *parser)
 
 	if (!GenerateOpcode(parser)) {
 		if (!parser->error) {
-			Error(parser->lexer->line, parser->lexer->col,
+			Error(parser->line, parser->col,
 					X584ASM_INVALID_OPCODE);
 		}
 	}
@@ -410,13 +424,13 @@ static int Term(struct parser *parser)
 		else { Back(parser); }
 	}
 	else if (parser->input == RUNE_NUMBER || parser->input == RUNE_HEX) {
-		Error(parser->lexer->line, parser->lexer->col,
+		Error(parser->line, parser->col,
 				X584ASM_UNEXPECTED_NUMBER);
 		Consume(parser);
 		result = REG_INVALID;
 	}
 	else if (parser->input == RUNE_WORD) {
-		Error(parser->lexer->line, parser->lexer->col,
+		Error(parser->line, parser->col,
 				X584ASM_UNEXPECTED_WORD);
 		Consume(parser);
 		result = REG_INVALID;
@@ -724,7 +738,7 @@ static int ShiftExpr(struct parser *parser)
 	}
 	else {
 		parser->invalid_instruction = true;
-		Error(parser->lexer->line, parser->lexer->col,
+		Error(parser->line, parser->col,
 				X584ASM_INVALID_OPCODE);
 	}
 
@@ -755,7 +769,7 @@ static int Carry(struct parser *parser)
 			Consume(parser);
 		}
 		else {
-			Error(parser->lexer->line, parser->lexer->col,
+			Error(parser->line, parser->col,
 					X584ASM_INVALID_CARRY_VAL);
 			Consume(parser);
 		}
@@ -768,7 +782,7 @@ static int Carry(struct parser *parser)
 static int RegisterLabel(struct parser *parser)
 {
 	if (parser->n_labels >= MAX_LABELS) {
-		Error(parser->lexer->line, parser->lexer->col,
+		Error(parser->line, parser->col,
 			X584ASM_TOO_MANY_LABELS);
 		return 0;
 	}
@@ -812,7 +826,7 @@ static int32_t GotoAddress(struct parser *parser)
 	if (parser->input == RUNE_NUMBER) {
 		long address = strtol(parser->token, NULL, 10);
 		if (address < 0 || address > N_INSTRUCTIONS) {
-			Error(parser->lexer->line, parser->lexer->col,
+			Error(parser->line, parser->col,
 				X584ASM_INVALID_ADDRESS);
 		}
 		else {
@@ -828,7 +842,7 @@ static int32_t GotoAddress(struct parser *parser)
 		Consume(parser);
 	}
 	else {
-		Error(parser->lexer->line, parser->lexer->col,
+		Error(parser->line, parser->col,
 			X584ASM_LABEL_EXPECTED);
 		label = INPUT_EOF;
 	}
@@ -981,7 +995,7 @@ static int Input(struct parser *parser)
 		else {
 			input_num = strtol(parser->token, NULL, 10);
 			if (input_num > 65535) {
-				Error(parser->lexer->line, parser->lexer->col,
+				Error(parser->line, parser->col,
 					X584ASM_INVALID_NUMBER);
 				return 0;
 			}
@@ -991,7 +1005,7 @@ static int Input(struct parser *parser)
 	else if (parser->input == RUNE_HEX) {
 		input_num = strtol(parser->token, NULL, 16);
 		if (input_num > 65535) {
-			Error(parser->lexer->line, parser->lexer->col,
+			Error(parser->line, parser->col,
 				X584ASM_INVALID_NUMBER);
 			return 0;
 		}
@@ -1001,7 +1015,7 @@ static int Input(struct parser *parser)
 		if (parser->input == RUNE_NUMBER) {
 			input_num = strtol(parser->token, NULL, 10);
 			if (input_num < 1 || input_num > 32768) {
-				Error(parser->lexer->line, parser->lexer->col,
+				Error(parser->line, parser->col,
 					X584ASM_INVALID_NUMBER);
 				return 0;
 			}
@@ -1132,6 +1146,8 @@ bool parser_init(struct parser *parser, struct lexer *lexer, struct program *pro
 	parser->lexer = lexer;
 	parser->prev_input = parser->input = parser->next_input
 		= INPUT_NOT_SAVED;
+	parser->prev_line = parser->line = parser->next_line = 1;
+	parser->prev_col = parser->col = parser->next_col = 1;
 	program_init(program);
 	parser->program = program;
 	parser->is_program_valid = true;
