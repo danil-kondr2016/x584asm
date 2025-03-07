@@ -16,7 +16,7 @@
 #include <windows.h>
 #endif
 
-#define X584ASM_VERSION "v0.2.1"
+#define X584ASM_VERSION "v0.2.2"
 
 const char banner[] = "This is X584ASM, version "
 	X584ASM_VERSION
