@@ -36,7 +36,7 @@ int u8main(int argc, char **argv)
 
 	puts(banner);
 	optparse_init(&opt, argv);
-	while ((option = optparse(&opt, "hvo::")) != -1) {
+	while ((option = optparse(&opt, "ho:v")) != -1) {
 		switch (option) {
 		case 'h':
 			printf("Usage: x584asm [-h|-v] input [-o output]\n");
