@@ -27,13 +27,15 @@ static int _is_newline(int32_t codepoint)
 
 static int32_t _l_getc(struct lexer *lexer)
 {
+	if (lexer->newline) {
+		lexer->input_line++;
+		lexer->input_col = 1;
+		lexer->newline = 0;
+	}
 	lexer->input_col++;
 	lexer->input = reader_getc(lexer->reader);
 	if (_is_newline(lexer->input)) {
-		lexer->input_line++;
-		lexer->input_col = 1;
-		lexer->line = lexer->input_line;
-		lexer->col = lexer->input_col;
+		lexer->newline = 1;
 	}
 	return lexer->input;
 }
@@ -214,8 +216,6 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 		category = utf8proc_category(lexer->input);
 		switch (lexer->input) {
 		case ':':
-			lexer->line = lexer->input_line;
-			lexer->col = lexer->input_col;
 			_l_getc(lexer);
 			if (lexer->input == '=') {
 				lexer->input = INPUT_NOT_SAVED;
@@ -228,8 +228,6 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			}
 			break;
 		case '/':
-			lexer->line = lexer->input_line;
-			lexer->col = lexer->input_col;
 			_l_getc(lexer);
 			if (lexer->input == '*') {
 				lexer->input = INPUT_NOT_SAVED;
@@ -246,15 +244,11 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			break;
 		case ';':
 		case '#':
-			lexer->line = lexer->input_line;
-			lexer->col = lexer->input_col;
 			lexer->input = INPUT_NOT_SAVED;
 			result = _annotation(lexer, token);
 			end = 1;
 			break;
 		case '0':
-			lexer->line = lexer->input_line;
-			lexer->col = lexer->input_col;
 			_l_getc(lexer);
 			if (lexer->input == 'x' || lexer->input == 'X') {
 				lexer->input = INPUT_NOT_SAVED;
@@ -271,8 +265,6 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			break;
 		case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
-			lexer->line = lexer->input_line;
-			lexer->col = lexer->input_col;
 			result = _number(lexer, token);
 			end = 1;
 			break;
@@ -292,8 +284,6 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			case UTF8PROC_CATEGORY_LM:
 			case UTF8PROC_CATEGORY_LO:
 			case UTF8PROC_CATEGORY_PC: // _
-				lexer->line = lexer->input_line;
-				lexer->col = lexer->input_col;
 				result = _word(lexer, token);
 				end = 1;
 				break;

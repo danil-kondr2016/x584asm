@@ -50,6 +50,7 @@ struct lexer {
 	int keywords_count;
 	int input_line, input_col;
 	int line, col;
+	int newline;
 };
 
 int lexer_init(struct lexer *lexer, struct reader *reader);

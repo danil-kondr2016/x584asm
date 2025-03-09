@@ -66,6 +66,15 @@ static void Panic(struct parser *parser, int error);
 static void Fail(struct parser *parser, int error);
 static int GenerateOpcode(struct parser *parser);
 
+static int IsValidBinary(char *str)
+{
+	for (int i = 0; str[i]; i++) {
+		if (str[i] != '0' && str[i] != '1')
+			return 0;
+	}
+	return 1;
+}
+
 static int32_t Consume(struct parser *parser)
 {
 	if (parser->next_input != INPUT_NOT_SAVED) {
@@ -319,6 +328,7 @@ static int Instruction(struct parser *parser)
 	while (ret && state);
 
 	if (!ret && parser->error) {
+		printf("<F>");
 		parser->invalid_instruction = true;
 		if (parser->non_fail) {
 			Panic(parser, parser->error);
@@ -326,14 +336,21 @@ static int Instruction(struct parser *parser)
 		else {
 			Fail(parser, parser->error);
 		}
+		
+	}
+	else {
+		if (!GenerateOpcode(parser)) {
+			if (!parser->error) {
+				Fail(parser, X584ASM_INVALID_OPCODE);
+			}
+		}
+		parser->address++;
 	}
 
-	if (!GenerateOpcode(parser)) {
-		if (!parser->error) {
-			Fail(parser, X584ASM_INVALID_OPCODE);
-		}
+	if (parser->input == RUNE_NUMBER || parser->input == RUNE_HEX) {
+		Panic(parser, X584ASM_UNEXPECTED_NUMBER);
 	}
-	parser->address++;
+
 	return 1;
 }
 
@@ -1055,6 +1072,12 @@ static int Input(struct parser *parser)
 	int32_t input_num = 0;
 	if (parser->input == RUNE_NUMBER) {
 		if (sdslen(parser->token) == 16) {
+			if (!IsValidBinary(parser->token)) {
+				parser->error = X584ASM_INVALID_NUMBER;
+				parser->non_fail = true;
+				return 0;
+			}
+
 			long val = strtol(parser->token, NULL, 2);
 			if (!val && strcmp(parser->token, "0000000000000000") != 0) {
 				parser->error = X584ASM_INVALID_NUMBER;
@@ -1067,6 +1090,8 @@ static int Input(struct parser *parser)
 		else if (sdslen(parser->token) == 4) {
 			long vals[4], n = 0;
 			do {
+				if (!IsValidBinary(parser->token))
+					break;
 				vals[n] = strtol(parser->token, NULL, 2);
 				if (!vals[n] && strcmp(parser->token, "0000") != 0) {
 					break;
@@ -1089,7 +1114,7 @@ static int Input(struct parser *parser)
 				// Number is in range of 0 to 9999.
 				if (!input_num && strcmp(parser->token, "0000") != 0) {
 					parser->error = X584ASM_INVALID_NUMBER;
-					parser->non_fail = false;
+					parser->non_fail = true;
 					return 0;
 				}
 			}
@@ -1105,7 +1130,7 @@ static int Input(struct parser *parser)
 			else {
 				// n == 2 || n == 3. Error
 				parser->error = X584ASM_INVALID_NUMBER;
-				parser->non_fail = false;
+				parser->non_fail = true;
 				return 0;
 			}
 		}
@@ -1113,7 +1138,7 @@ static int Input(struct parser *parser)
 			input_num = strtol(parser->token, NULL, 10);
 			if (input_num > 65535) {
 				parser->error = X584ASM_INVALID_NUMBER;
-				parser->non_fail = false;
+				parser->non_fail = true;
 				return 0;
 			}
 			Consume(parser);
@@ -1123,7 +1148,7 @@ static int Input(struct parser *parser)
 		input_num = strtol(parser->token, NULL, 16);
 		if (input_num > 65535) {
 			parser->error = X584ASM_INVALID_NUMBER;
-			parser->non_fail = false;
+			parser->non_fail = true;
 			return 0;
 		}
 		Consume(parser);
@@ -1133,7 +1158,7 @@ static int Input(struct parser *parser)
 			input_num = strtol(parser->token, NULL, 10);
 			if (input_num < 1 || input_num > 32768) {
 				parser->error = X584ASM_INVALID_NUMBER;
-				parser->non_fail = false;
+				parser->non_fail = true;
 				return 0;
 			}
 			input_num = -input_num;
