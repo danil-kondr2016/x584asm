@@ -35,6 +35,7 @@ enum keyword_type {
 	KW_INPUT, KW_AND, KW_OR, KW_XOR,
 	KW_BREAK, KW_HALT,
 	KW_ALUCIN,
+	KW_EMPTY,
 };
 
 struct keyword {
