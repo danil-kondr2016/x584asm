@@ -537,6 +537,19 @@ static int Opcode(struct parser *parser)
 		program_set_opcode(parser->program, parser->address, NOP, brk, 0);
 		return 1;
 	}
+	else if (Match(parser, '<')) {
+		if (!Match(parser, KW_EMPTY)) {
+			Panic(parser, X584ASM_EMPTY_EXPECTED);
+			return 0;
+		}
+		if (!Match(parser, '>')) {
+			Panic(parser, X584ASM_EMPTY_EXPECTED);
+			return 0;
+		}
+		parser->op = OP_NOP;
+		program_set_opcode(parser->program, parser->address, NOP, brk, 0);
+		return 1;
+	}
 	else if (Match(parser, KW_HALT)) {
 		parser->op = OP_HALT;
 		program_set_opcode(parser->program, parser->address, NOP, 1, 0);
