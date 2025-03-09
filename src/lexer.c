@@ -214,6 +214,8 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 		category = utf8proc_category(lexer->input);
 		switch (lexer->input) {
 		case ':':
+			lexer->line = lexer->input_line;
+			lexer->col = lexer->input_col;
 			_l_getc(lexer);
 			if (lexer->input == '=') {
 				lexer->input = INPUT_NOT_SAVED;
@@ -226,6 +228,8 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			}
 			break;
 		case '/':
+			lexer->line = lexer->input_line;
+			lexer->col = lexer->input_col;
 			_l_getc(lexer);
 			if (lexer->input == '*') {
 				lexer->input = INPUT_NOT_SAVED;
@@ -242,11 +246,15 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			break;
 		case ';':
 		case '#':
+			lexer->line = lexer->input_line;
+			lexer->col = lexer->input_col;
 			lexer->input = INPUT_NOT_SAVED;
 			result = _annotation(lexer, token);
 			end = 1;
 			break;
 		case '0':
+			lexer->line = lexer->input_line;
+			lexer->col = lexer->input_col;
 			_l_getc(lexer);
 			if (lexer->input == 'x' || lexer->input == 'X') {
 				lexer->input = INPUT_NOT_SAVED;
@@ -263,12 +271,12 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			break;
 		case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
+			lexer->line = lexer->input_line;
+			lexer->col = lexer->input_col;
 			result = _number(lexer, token);
 			end = 1;
 			break;
 		case '\t':
-			lexer->line = lexer->input_line;
-			lexer->col = lexer->input_col;
 		case '\r':
 		case '\n':
 		case '\v':
@@ -284,12 +292,12 @@ int32_t lexer_next(struct lexer *lexer, sds *token)
 			case UTF8PROC_CATEGORY_LM:
 			case UTF8PROC_CATEGORY_LO:
 			case UTF8PROC_CATEGORY_PC: // _
+				lexer->line = lexer->input_line;
+				lexer->col = lexer->input_col;
 				result = _word(lexer, token);
 				end = 1;
 				break;
 			case UTF8PROC_CATEGORY_ZS:
-				lexer->line = lexer->input_line;
-				lexer->col = lexer->input_col;
 			case UTF8PROC_CATEGORY_ZL:
 			case UTF8PROC_CATEGORY_ZP:
 				lexer->input = INPUT_NOT_SAVED;
