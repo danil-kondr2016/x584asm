@@ -8,6 +8,7 @@
 #define NOP 154
 
 #include "opcodes.h"
+#include <utf8proc.h>
 
 /*
  * Grammar of language:
@@ -62,6 +63,7 @@ static int32_t Consume(struct parser *parser);
 static int Back(struct parser *parser);
 static int Match(struct parser *parser, int32_t rune);
 static void Panic(struct parser *parser, int error);
+static void Fail(struct parser *parser, int error);
 static int GenerateOpcode(struct parser *parser);
 
 static int32_t Consume(struct parser *parser)
@@ -88,6 +90,8 @@ static int32_t Consume(struct parser *parser)
 	}
 	parser->prev_token = parser->token;
 	parser->prev_input = parser->input;
+	parser->prev_line = parser->line;
+	parser->prev_col = parser->col;
 	parser->token = NULL;
 	parser->input = lexer_next(parser->lexer, &parser->token);
 	parser->line = parser->lexer->line;
@@ -149,6 +153,13 @@ static int MatchLabel(struct parser *parser)
 	}
 }
 
+static void Fail(struct parser *parser, int error)
+{
+	if (error) {
+		parser->is_program_valid = false;
+		Error(parser->line, parser->col, error);
+	}
+}
 
 static void Panic(struct parser *parser, int error)
 {
@@ -251,13 +262,13 @@ static int Instruction(struct parser *parser)
 	parser->carry = CARRY_UNUSED;
 	parser->error = 0;
 	parser->invalid_instruction = false;
+	parser->non_fail = false;
 
 	if (parser->input == INPUT_EOF) {
 		return 0;
 	}
 	if (parser->address >= N_INSTRUCTIONS) {
-		Error(parser->line, parser->col,
-			X584ASM_TOO_MANY_INSTRUCTIONS);
+		Fail(parser, X584ASM_TOO_MANY_INSTRUCTIONS);
 		parser->is_program_valid = false;
 		return 0;
 	}
@@ -279,6 +290,8 @@ static int Instruction(struct parser *parser)
 		case 2:
 			ret = Operator(parser);
 			if (!ret) {
+				if (parser->error)
+					break;
 				ret = Annotation(parser);
 				if (!ret)
 					break;
@@ -305,20 +318,19 @@ static int Instruction(struct parser *parser)
 	}
 	while (ret && state);
 
-	if (!ret && !valid_opcode) {
+	if (!ret && parser->error) {
 		parser->invalid_instruction = true;
-		if (!parser->error) {
-			parser->error = X584ASM_SYNTAX_ERROR;
-			Panic(parser, X584ASM_SYNTAX_ERROR);
-		}
-		else if (parser->error != X584ASM_INVALID_OPCODE)
+		if (parser->non_fail) {
 			Panic(parser, parser->error);
+		}
+		else {
+			Fail(parser, parser->error);
+		}
 	}
 
 	if (!GenerateOpcode(parser)) {
 		if (!parser->error) {
-			Error(parser->line, parser->col,
-					X584ASM_INVALID_OPCODE);
+			Fail(parser, X584ASM_INVALID_OPCODE);
 		}
 	}
 	parser->address++;
@@ -432,14 +444,12 @@ static int Term(struct parser *parser)
 		else { Back(parser); }
 	}
 	else if (parser->input == RUNE_NUMBER || parser->input == RUNE_HEX) {
-		Error(parser->line, parser->col,
-				X584ASM_UNEXPECTED_NUMBER);
+		Fail(parser, X584ASM_UNEXPECTED_NUMBER);
 		Consume(parser);
 		result = REG_INVALID;
 	}
 	else if (parser->input == RUNE_WORD) {
-		Error(parser->line, parser->col,
-				X584ASM_UNEXPECTED_WORD);
+		Fail(parser, X584ASM_UNEXPECTED_WORD);
 		Consume(parser);
 		result = REG_INVALID;
 	}
@@ -470,18 +480,28 @@ static int XAssign(struct parser *parser)
 		return 0; 
 	}
 	if (!Match(parser, KW_WR)) {
+		parser->error = X584ASM_SYNTAX_ERROR;
+		parser->non_fail = true;
 		return 0;
 	}
 	if (!Match(parser, ',')) {
+		parser->error = X584ASM_SYNTAX_ERROR;
+		parser->non_fail = true;
 		return 0;
 	}
 	if (!Match(parser, KW_XWR)) {
+		parser->error = X584ASM_SYNTAX_ERROR;
+		parser->non_fail = true;
 		return 0;
 	}
 	if (!Match(parser, ')')) {
+		parser->error = X584ASM_SYNTAX_ERROR;
+		parser->non_fail = true;
 		return 0;
 	}
 	if (!Match(parser, RUNE_ASSIGN)) {
+		parser->error = X584ASM_SYNTAX_ERROR;
+		parser->non_fail = true;
 		return 0;
 	}
 
@@ -499,18 +519,26 @@ static int XAssign(struct parser *parser)
 	}
 	if (!Match(parser, '(')) {
 		parser->error = X584ASM_LPAR_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
-	if (!AddLogExpr(parser))
+	if (!AddLogExpr(parser)) {
+		parser->non_fail = true;
 		return 0;
+	}
 	if (!Match(parser, ',')) {
 		parser->error = X584ASM_COMMA_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
-	if (!Match(parser, KW_XWR))
+	if (!Match(parser, KW_XWR)) {
+		parser->error = X584ASM_SYNTAX_ERROR;
+		parser->non_fail = true;
 		return 0;
+	}
 	if (!Match(parser, ')')) {
 		parser->error = X584ASM_RPAR_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 
@@ -547,11 +575,13 @@ static int Opcode(struct parser *parser)
 	}
 	else if (Match(parser, '<')) {
 		if (!Match(parser, KW_EMPTY)) {
-			Panic(parser, X584ASM_EMPTY_EXPECTED);
+			parser->error = X584ASM_EMPTY_EXPECTED;
+			parser->non_fail = true;
 			return 0;
 		}
 		if (!Match(parser, '>')) {
-			Panic(parser, X584ASM_EMPTY_EXPECTED);
+			parser->error = X584ASM_EMPTY_EXPECTED;
+			parser->non_fail = true;
 			return 0;
 		}
 		parser->op = OP_NOP;
@@ -615,7 +645,8 @@ static int AddLogExpr(struct parser *parser)
 
 			term = Term(parser);
 			if (!term) {
-				Panic(parser, X584ASM_TERM_EXPECTED);
+				parser->error = X584ASM_TERM_EXPECTED;
+				parser->non_fail = true;
 				return 0;
 			}
 			AddRegister(parser, term, sub);
@@ -639,26 +670,68 @@ static int AddLogExpr(struct parser *parser)
 				parser->op = OP_XOR;
 			}
 			else {
-				Panic(parser, X584ASM_OP_EXPECTED);
+				parser->error = X584ASM_OP_EXPECTED;
+				parser->non_fail = true;
 				return 0;
 			}
 			Consume(parser);
 
 			term = Term(parser);
 			if (!term) {
-				Panic(parser, X584ASM_TERM_EXPECTED);
+				parser->error = X584ASM_TERM_EXPECTED;
+				parser->non_fail = true;
 				return 0;
 			}
 
 			parser->arg2 = term;
 			break;
 		}
-		else if (parser->input == '=') {
-			// something that shouldn't be inside expression
-			Panic(parser, X584ASM_UNEXPECTED_SYMBOL);
-			return 0;
-		}
 		else {
+			utf8proc_category_t category;
+
+			category = utf8proc_category(parser->input);
+			switch (parser->input) {
+			case ',': // maybe , РРР)
+				if (parser->op != OP_SHL_X && parser->op != OP_SHR_X
+					&& parser->op != OP_SAL_X && parser->op != OP_SAR_X
+					&& parser->op != OP_ROL_X && parser->op != OP_ROR_X)
+				{
+					// definitely not
+					parser->error = X584ASM_UNEXPECTED_SYMBOL;
+					parser->non_fail = true;
+					return 0;
+				}
+				break;
+			case ')': // maybe inside shift expression
+				if (parser->op != OP_SHL && parser->op != OP_SHR
+					&& parser->op != OP_SAL && parser->op != OP_SAR
+					&& parser->op != OP_ROL && parser->op != OP_ROR)
+				{
+					// definitely not
+					parser->error = X584ASM_UNEXPECTED_SYMBOL;
+					parser->non_fail = true;
+					return 0;
+				}
+				break;
+			case '(': // maybe (П=0) or (РР,РРР)
+			case '<': // maybe <ПУСТО>
+			case RUNE_WORD:
+			case RUNE_ANNOTATION:
+			case INPUT_EOF: // definitely end of file
+				break;
+			case RUNE_NUMBER:
+			case RUNE_HEX:
+				parser->error = X584ASM_UNEXPECTED_NUMBER;
+				parser->non_fail = true;
+				return 0;
+			default:
+				if (parser->input <= 0x10FFFF) {
+					parser->error = X584ASM_UNEXPECTED_SYMBOL;
+					parser->non_fail = true;
+					return 0;
+				}
+				// every keyword can be start of new expression
+			}
 			// maybe nothing
 			break;
 		}
@@ -684,7 +757,8 @@ static int NXorExpr(struct parser *parser)
 		
 	term = Term(parser);
 	if (!term) {
-		Panic(parser, X584ASM_TERM_EXPECTED);
+		parser->non_fail = true;
+		parser->error = X584ASM_TERM_EXPECTED;
 		return 0;
 	}
 	parser->arg1 = term;
@@ -693,19 +767,22 @@ static int NXorExpr(struct parser *parser)
 		parser->op = OP_NXOR;
 	}
 	else {
-		Panic(parser, X584ASM_XOR_EXPECTED);
+		parser->non_fail = true;
+		parser->error = X584ASM_XOR_EXPECTED;
 		return 0;
 	}
 
 	term = Term(parser);
 	if (!term) {
-		Panic(parser, X584ASM_TERM_EXPECTED);
+		parser->error = X584ASM_TERM_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 	parser->arg2 = term;
 
 	if (!Match(parser, ')')) {
-		Panic(parser, X584ASM_RPAR_EXPECTED);
+		parser->error = X584ASM_RPAR_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 
@@ -738,20 +815,20 @@ static int ShiftExpr(struct parser *parser)
 	parser->op = shift_op;
 
 	if (!Match(parser, '(')) {
-		Panic(parser, X584ASM_LPAR_EXPECTED);
+		parser->error = X584ASM_LPAR_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 
 	if (!AddLogExpr(parser)) {
-		Panic(parser, X584ASM_INVALID_OPCODE);
 		return 0;
 	}
 
 	if (!Match(parser, ')')) {
-		Panic(parser, X584ASM_LPAR_EXPECTED);
+		parser->error = X584ASM_RPAR_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
-
 
 	if (parser->arg_add == X_WR_p_C) {
 		parser->carry = CARRY_INDEFINITE;
@@ -764,8 +841,7 @@ static int ShiftExpr(struct parser *parser)
 	}
 	else {
 		parser->invalid_instruction = true;
-		Error(parser->line, parser->col,
-				X584ASM_INVALID_OPCODE);
+		Fail(parser, X584ASM_INVALID_OPCODE);
 	}
 
 	return 1;
@@ -781,8 +857,11 @@ static int Carry(struct parser *parser)
 		Back(parser); // restore '('
 		return 0;
 	}
-	if (!Match(parser, '='))
+	if (!Match(parser, '=')) {
+		parser->error = X584ASM_SYNTAX_ERROR;
+		parser->non_fail = true;
 		return 0;
+	}
 	if (parser->input == RUNE_NUMBER) {
 		if (parser->token[0] == '0' && !parser->token[1]) {
 			parser->carry = CARRY_VALUE_0;
@@ -795,21 +874,22 @@ static int Carry(struct parser *parser)
 			Consume(parser);
 		}
 		else {
-			Error(parser->line, parser->col,
-					X584ASM_INVALID_CARRY_VAL);
+			Fail(parser, X584ASM_INVALID_CARRY_VAL);
 			Consume(parser);
 		}
 	}
-	if (!Match(parser, ')'))
+	if (!Match(parser, ')')) {
+		parser->error = X584ASM_RPAR_EXPECTED;
+		parser->non_fail = true;
 		return 0;
+	}
 	return result;
 }
 
 static int RegisterLabel(struct parser *parser)
 {
 	if (parser->n_labels >= MAX_LABELS) {
-		Error(parser->line, parser->col,
-			X584ASM_TOO_MANY_LABELS);
+		Fail(parser, X584ASM_TOO_MANY_LABELS);
 		return 0;
 	}
 	else {
@@ -836,7 +916,8 @@ static int Label(struct parser *parser)
 
 
 	if (!Match(parser, ':')) {
-		Panic(parser, X584ASM_COLON_EXPECTED);
+		parser->error = X584ASM_COLON_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 
@@ -852,8 +933,7 @@ static int32_t GotoAddress(struct parser *parser)
 	if (parser->input == RUNE_NUMBER) {
 		long address = strtol(parser->token, NULL, 10);
 		if (address < 0 || address > N_INSTRUCTIONS) {
-			Error(parser->line, parser->col,
-				X584ASM_INVALID_ADDRESS);
+			Fail(parser, X584ASM_INVALID_ADDRESS);
 		}
 		else {
 			label = address;
@@ -868,8 +948,7 @@ static int32_t GotoAddress(struct parser *parser)
 		Consume(parser);
 	}
 	else {
-		Error(parser->line, parser->col,
-			X584ASM_LABEL_EXPECTED);
+		Fail(parser, X584ASM_LABEL_EXPECTED);
 		label = INPUT_EOF;
 	}
 
@@ -919,27 +998,34 @@ static int Conditional(struct parser *parser)
 		else if (Match(parser, KW_A15)) { flag = ~KW_A15; }
 		else if (Match(parser, KW_B15)) { flag = ~KW_B15; }
 		else {
-			Panic(parser, X584ASM_FLAG_EXPECTED);
+			Consume(parser);
+			parser->error = X584ASM_FLAG_EXPECTED;
+			parser->non_fail = true;
 			return 0;
 		}
 	}
 	else {
-		Panic(parser, X584ASM_FLAG_EXPECTED);
+		Consume(parser);
+		parser->error = X584ASM_FLAG_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 	if (!Match(parser, KW_THEN)) {
-		Panic(parser, X584ASM_THEN_EXPECTED);
+		parser->error = X584ASM_THEN_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 	label_then = GotoAddress(parser);
 	if (!label_then) {
-		Panic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
+		parser->error = X584ASM_LABEL_OR_ADDRESS_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 	if (Match(parser, KW_ELSE)) {
 		label_else = GotoAddress(parser);
 		if (!label_else) {
-			Panic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
+			parser->error = X584ASM_LABEL_OR_ADDRESS_EXPECTED;
+			parser->non_fail = true;
 			return 0;
 		}
 	}
@@ -953,7 +1039,8 @@ static int Goto(struct parser *parser)
 	int32_t label_to = LABEL_NEXT;
 	label_to = GotoAddress(parser);
 	if (!label_to) {
-		Panic(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
+		parser->error = X584ASM_LABEL_OR_ADDRESS_EXPECTED;
+		parser->non_fail = true;
 		return 0;
 	}
 	program_set_goto(parser->program, parser->address, label_to);
@@ -970,7 +1057,8 @@ static int Input(struct parser *parser)
 		if (sdslen(parser->token) == 16) {
 			long val = strtol(parser->token, NULL, 2);
 			if (!val && strcmp(parser->token, "0000000000000000") != 0) {
-				Panic(parser, X584ASM_INVALID_NUMBER);
+				parser->error = X584ASM_INVALID_NUMBER;
+				parser->non_fail = true;
 				return 0;
 			}
 			input_num = val; // by definition val <= 65535 and val > 0
@@ -979,10 +1067,6 @@ static int Input(struct parser *parser)
 		else if (sdslen(parser->token) == 4) {
 			long vals[4], n = 0;
 			do {
-				if (n == 4) {
-					Panic(parser, X584ASM_INVALID_NUMBER);
-					return 0;
-				}
 				vals[n] = strtol(parser->token, NULL, 2);
 				if (!vals[n] && strcmp(parser->token, "0000") != 0) {
 					break;
@@ -993,13 +1077,19 @@ static int Input(struct parser *parser)
 					break;
 				}
 			}
-			while (n < 5);
+			while (n < 4);
+			if (n == 4 && parser->input == RUNE_NUMBER) {
+				parser->error = X584ASM_INVALID_NUMBER;
+				parser->non_fail = true;
+				return 0;
+			}
 			if (n == 0) {
 				// Number is not like binary.
 				input_num = strtol(parser->token, NULL, 10);
 				// Number is in range of 0 to 9999.
 				if (!input_num && strcmp(parser->token, "0000") != 0) {
-					Panic(parser, X584ASM_INVALID_NUMBER);
+					parser->error = X584ASM_INVALID_NUMBER;
+					parser->non_fail = false;
 					return 0;
 				}
 			}
@@ -1014,15 +1104,16 @@ static int Input(struct parser *parser)
 			}
 			else {
 				// n == 2 || n == 3. Error
-				Panic(parser, X584ASM_INVALID_NUMBER);
+				parser->error = X584ASM_INVALID_NUMBER;
+				parser->non_fail = false;
 				return 0;
 			}
 		}
 		else {
 			input_num = strtol(parser->token, NULL, 10);
 			if (input_num > 65535) {
-				Error(parser->line, parser->col,
-					X584ASM_INVALID_NUMBER);
+				parser->error = X584ASM_INVALID_NUMBER;
+				parser->non_fail = false;
 				return 0;
 			}
 			Consume(parser);
@@ -1031,8 +1122,8 @@ static int Input(struct parser *parser)
 	else if (parser->input == RUNE_HEX) {
 		input_num = strtol(parser->token, NULL, 16);
 		if (input_num > 65535) {
-			Error(parser->line, parser->col,
-				X584ASM_INVALID_NUMBER);
+			parser->error = X584ASM_INVALID_NUMBER;
+			parser->non_fail = false;
 			return 0;
 		}
 		Consume(parser);
@@ -1041,8 +1132,8 @@ static int Input(struct parser *parser)
 		if (parser->input == RUNE_NUMBER) {
 			input_num = strtol(parser->token, NULL, 10);
 			if (input_num < 1 || input_num > 32768) {
-				Error(parser->line, parser->col,
-					X584ASM_INVALID_NUMBER);
+				parser->error = X584ASM_INVALID_NUMBER;
+				parser->non_fail = false;
 				return 0;
 			}
 			input_num = -input_num;
