@@ -152,36 +152,44 @@ static int MatchLabel(struct parser *parser)
 
 static void Panic(struct parser *parser, int error)
 {
+	parser->is_program_valid = false;
 	if (error)
 		Error(parser->line, parser->col, error);
+	if (parser->input == '=') // if Panic called in this position, it should be invalid
+		Consume(parser);
+
 	while (parser->input != RUNE_ASSIGN
+			&& parser->input != '=' // like ":="
 			&& parser->input != ':' // Maybe label
 			&& parser->input != '(' // Maybe carry, shift or (WR,XWR)
 			&& parser->input != KW_BREAK // Start of instruction
 			&& parser->input != KW_HALT // Opcode
 			&& parser->input != KW_NOP // Opcode
+			&& parser->input != '<' // Should be <ПУСТО>
 			&& parser->input != INPUT_EOF)
 	{
 		Consume(parser);
-		if (parser->input == '(' 
-			&& (parser->prev_input == KW_SHL || parser->prev_input == KW_SHR
+		if (parser->input == '(') {
+			if ((parser->prev_input == KW_SHL || parser->prev_input == KW_SHR
 			|| parser->prev_input == KW_SAL || parser->input == KW_SAR
 			|| parser->prev_input == KW_ROL || parser->input == KW_ROR))
-		{
-			// Guaranteed to be shift, skip it
-			Consume(parser);
+			{
+				// Guaranteed to be shift, skip it
+				Consume(parser);
+			}
+			else {
+				Consume(parser);
+				if (parser->prev_input != KW_C) {
+					// Should be (WR,XWR)
+					Back(parser);
+					break;
+				}
+			}
 		}
-	}
-
-	switch (parser->input) {
-	case ':': // Maybe label
-		if (parser->prev_input == RUNE_WORD || IS_RUNE_LABEL(parser->prev_input))
-			Back(parser);
-		else 
-			Consume(parser);
-		break;
-	case RUNE_ASSIGN: // Maybe assign
-		if (parser->prev_input == KW_RF0
+		else if (parser->input == '=' || parser->input == RUNE_ASSIGN) {
+			if (parser->input == '=' && parser->prev_input == KW_C) // Should be П=0 or П=1
+				Consume(parser);
+			else if (parser->prev_input == KW_RF0 // Should be РОН = ... or РОН := ...
 				|| parser->prev_input == KW_RF1
 				|| parser->prev_input == KW_RF2
 				|| parser->prev_input == KW_RF3
@@ -192,19 +200,19 @@ static void Panic(struct parser *parser, int error)
 				|| parser->prev_input == KW_WR
 				|| parser->prev_input == KW_XWR
 				|| parser->prev_input == KW_DOP)
+			{
+				Back(parser);
+				break;
+			}
+		}
+	}
+
+	switch (parser->input) {
+	case ':': // Maybe label
+		if (parser->prev_input == RUNE_WORD || IS_RUNE_LABEL(parser->prev_input))
 			Back(parser);
-		else
+		else 
 			Consume(parser);
-		break;
-	case '(':
-		Consume(parser);
-		if (parser->input == KW_C) {
-			while (parser->input != ')') Consume(parser);
-			Consume(parser);
-		}
-		else {
-			Back(parser); // maybe (РР,РРР)
-		}
 		break;
 	}
 }
@@ -644,6 +652,11 @@ static int AddLogExpr(struct parser *parser)
 
 			parser->arg2 = term;
 			break;
+		}
+		else if (parser->input == '=') {
+			// something that shouldn't be inside expression
+			Panic(parser, X584ASM_UNEXPECTED_SYMBOL);
+			return 0;
 		}
 		else {
 			// maybe nothing
