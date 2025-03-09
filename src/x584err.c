@@ -32,6 +32,7 @@ static const char *_errors[] = {
 	[X584ASM_UNEXPECTED_NUMBER] = "Unexpected number",
 	[X584ASM_UNEXPECTED_WORD] = "Unexpected word",
 	[X584ASM_UNEXPECTED_SYMBOL] = "Unexpected symbol",
+	[X584ASM_UNEXPECTED_ANNOTATION] = "Unexpected annotation",
 };
 
 int Error(int line, int col, int error)

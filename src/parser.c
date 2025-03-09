@@ -328,7 +328,6 @@ static int Instruction(struct parser *parser)
 	while (ret && state);
 
 	if (!ret && parser->error) {
-		printf("<F>");
 		parser->invalid_instruction = true;
 		if (parser->non_fail) {
 			Panic(parser, parser->error);
@@ -349,6 +348,15 @@ static int Instruction(struct parser *parser)
 
 	if (parser->input == RUNE_NUMBER || parser->input == RUNE_HEX) {
 		Panic(parser, X584ASM_UNEXPECTED_NUMBER);
+	}
+	else if (parser->input == RUNE_ANNOTATION) {
+		Panic(parser, X584ASM_UNEXPECTED_ANNOTATION);
+	}
+	else if (parser->input == RUNE_WORD) {
+		;//maybe label, don't touch
+	}
+	else if (parser->input <= 0x10FFFF && parser->input != INPUT_EOF) {
+		Panic(parser, X584ASM_UNEXPECTED_SYMBOL);
 	}
 
 	return 1;
