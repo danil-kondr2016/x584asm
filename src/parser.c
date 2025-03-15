@@ -355,6 +355,12 @@ static int Instruction(struct parser *parser)
 	else if (parser->input == RUNE_WORD) {
 		;//maybe label, don't touch
 	}
+	else if (parser->input == '<') {
+		;//maybe <ПУСТО>
+	}
+	else if (parser->input == '(') {
+		;//maybe (WR,XWR)
+	}
 	else if (parser->input <= 0x10FFFF && parser->input != INPUT_EOF) {
 		Panic(parser, X584ASM_UNEXPECTED_SYMBOL);
 	}
