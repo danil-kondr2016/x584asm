@@ -136,12 +136,14 @@ struct opcode_data {
 	{ARG(ADD_REG)|ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, REG_R7, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, (_op)|0007}
 
 #define SUM2(_var, _a, _b, _op) \
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, REG_##_a, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b), VAR_##_var, REG_##_a, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, REG_##_a, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, _op}
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, _op}
 
 #define SUM1(_var, _a, _op) \
-	{ARG(ADD_##_a)|ARG(ADD_C), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op}
+	{ARG(ADD_##_a)|ARG(ADD_C), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op},\
+	{ARG(ADD_##_a), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_1), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, _op}
 
 #define SUM2_VARREG_REG1(_b, _op) \
 	{ARG(ADD_REG)|ARG(ADD_##_b)|ARG(ADD_C), VAR_R0, REG_R0, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, (_op)|0000},\
