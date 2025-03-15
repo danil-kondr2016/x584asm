@@ -1211,8 +1211,8 @@ static int GenerateOpcode(struct parser *parser)
 {
 	int opcode, tmp;
 #ifdef _DEBUG_FIND
-	printf("@ OP VR ARGS_ADD A1 A2 RG BK CY\n");
-	printf("@ %2d %2d %08X %2d %2d %2d %2d %2d\n",
+	printf("@ OP VR ARGS_ADD A1 A2 RG BK CY OPCODE\n");
+	printf("@ %2d %2d %08X %2d %2d %2d %2d %2d ---\n",
 		parser->op, parser->var, parser->arg_add,
 		parser->arg1, parser->arg2, parser->reg,
 		parser->brk, parser->carry);
@@ -1240,10 +1240,10 @@ static int GenerateOpcode(struct parser *parser)
 		}
 
 #ifdef _DEBUG_FIND
-		printf("? %2d %2d %08X %2d %2d %2d -- %2d\n",
+		printf("? %2d %2d %08X %2d %2d %2d -- %2d 0%03o\n",
 			_opcodes[i].op, _opcodes[i].var, _opcodes[i].arg_add,
 			_opcodes[i].arg1, _opcodes[i].arg2, _opcodes[i].reg,
-			_opcodes[i].carry);
+			_opcodes[i].carry, _opcodes[i].opcode);
 #endif
 
 		if (parser->op == OP_ADD_SUB_NEG 
