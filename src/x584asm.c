@@ -16,11 +16,11 @@
 #include <windows.h>
 #endif
 
-#define X584ASM_VERSION "v0.2.4"
+#define X584ASM_VERSION "v0.2.5"
 
-const char banner[] = "This is X584ASM, version "
-	X584ASM_VERSION
-	" (compiled " __DATE__ " " __TIME__ ")";
+const char compiled[] = __DATE__ " " __TIME__;
+const char version[] = X584ASM_VERSION;
+const char banner[] = "This is X584ASM, version %s (compiled %s)\n";
 
 int u8main(int argc, char **argv)
 {
@@ -34,7 +34,7 @@ int u8main(int argc, char **argv)
 	char *output = NULL;
 	int option;
 
-	puts(banner);
+	printf(banner, version, compiled);
 	optparse_init(&opt, argv);
 	while ((option = optparse(&opt, "ho:v")) != -1) {
 		switch (option) {
