@@ -16,11 +16,12 @@
 #include <windows.h>
 #endif
 
-#define X584ASM_VERSION "v0.2.6"
+#define X584ASM_VERSION "v0.2.7"
 
 const char compiled[] = __DATE__ " " __TIME__;
 const char version[] = X584ASM_VERSION;
-const char banner[] = "This is X584ASM, version %s (compiled %s)\n";
+const char banner[] = "This is X584ASM, version %s\n";
+const char banner_ext[] = "This is X584ASM, version %s (compiled %s)\n";
 
 int u8main(int argc, char **argv)
 {
@@ -34,7 +35,6 @@ int u8main(int argc, char **argv)
 	char *output = NULL;
 	int option;
 
-	printf(banner, version, compiled);
 	optparse_init(&opt, argv);
 	while ((option = optparse(&opt, "ho:v")) != -1) {
 		switch (option) {
@@ -42,6 +42,7 @@ int u8main(int argc, char **argv)
 			printf("Usage: x584asm [-h|-v] input [-o output]\n");
 			return 0;
 		case 'v':
+			printf(banner_ext, version, compiled);
 			puts("Copyright (c) Danila A. Kondratenko, 2025");
 			return 0;
 		case 'o':
@@ -53,9 +54,10 @@ int u8main(int argc, char **argv)
 		}
 	}
 
+	printf(banner, version);
 	input = optparse_arg(&opt);
 	if (!input) {
-		fprintf(stderr, "! Fatal error: Input file not specified\n");
+		Die(X584ASM_FATAL_INPUT_NOT_SPECIFIED);
 		return 1;
 	}
 	printf("Input file: %s\n", input);

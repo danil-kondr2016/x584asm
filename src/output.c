@@ -22,9 +22,8 @@ int program_output(struct program *program, char *u8path)
 
 	output = u8open(u8path, "wb");
 	if (!output) {
-		int error = errno;
-		fprintf(stderr, "! Failed to open file %s: %s\n", u8path,
-				strerror(error));
+		printf("Output was to be written on %s\n", u8path);
+		Die(X584ASM_FATAL_FAILED_TO_OPEN_OUTPUT_FILE);
 		return 0;
 	}
 

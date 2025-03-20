@@ -20,9 +20,7 @@ int reader_open(struct reader *r, char *u8path)
 	r->temp = CRLF_NOT_SAVED;
 	r->file = u8open(u8path, "rb");
 	if (!r->file) {
-		int error = errno;
-		fprintf(stderr, "! Failed to open file %s: %s\n", u8path,
-				strerror(errno));
+		Die(X584ASM_FATAL_FAILED_TO_OPEN_INPUT_FILE);
 		return 0;
 	}
 

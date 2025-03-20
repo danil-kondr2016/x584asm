@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 static const char *_errors[] = {
-	[X584ASM_FATAL_OUT_OF_MEMORY] = "Fatal error: out of memory",
 	[X584ASM_COMMA_EXPECTED] = "',' expected",
 	[X584ASM_TOO_MANY_LABELS] = "Too many labels (more than 1024)",
 	[X584ASM_COLON_EXPECTED] = "':' expected",
@@ -14,10 +13,8 @@ static const char *_errors[] = {
 	[X584ASM_INVALID_CARRY_VAL] = "Invalid carry value",
 	[X584ASM_INVALID_NUMBER] = "Invalid number",
 	[X584ASM_INVALID_OPCODE] = "Invalid opcode",
-	[X584ASM_LABEL_EXPECTED] = "Label expected",
 	[X584ASM_LABEL_OR_ADDRESS_EXPECTED] = "Label or address expected",
 	[X584ASM_LPAR_EXPECTED] = "'(' expected",
-	[X584ASM_OP_EXPECTED] = "Operator expected ('+','-','and','or','xor')",
 	[X584ASM_RPAR_EXPECTED] = "')' expected",
 	[X584ASM_TERM_EXPECTED] = "Argument expected (РОН0-РОН7,РР,РРР,ШИНвх,Швх,П)",
 	[X584ASM_THEN_EXPECTED] = "'then' or 'то' expected",
@@ -28,6 +25,13 @@ static const char *_errors[] = {
 	[X584ASM_UNEXPECTED_WORD] = "Unexpected word",
 	[X584ASM_UNEXPECTED_SYMBOL] = "Unexpected symbol",
 	[X584ASM_UNEXPECTED_ANNOTATION] = "Unexpected annotation",
+};
+
+static const char *_fatals[] = {
+	[X584ASM_FATAL_OUT_OF_MEMORY] = "out of memory",
+	[X584ASM_FATAL_FAILED_TO_OPEN_INPUT_FILE] = "failed to open input file",
+	[X584ASM_FATAL_FAILED_TO_OPEN_OUTPUT_FILE] = "failed to open output file",
+	[X584ASM_FATAL_INPUT_NOT_SPECIFIED] = "input file not specified",
 };
 
 int Error(int line, int col, int error)
@@ -44,9 +48,9 @@ int Error(int line, int col, int error)
 
 int Die(int error)
 {
-	if (error < X584ASM_ERROR_MAX && error > 0)
-		fprintf(stderr, "! %s\n", _errors[error]);
+	if (error < X584ASM_FATAL_MAX && error > 0)
+		fprintf(stderr, "! Fatal error: %s\n", _fatals[error]);
 	else
-		fprintf(stderr, "! Error %d\n", error);
+		fprintf(stderr, "! Fatal error #%d\n", error);
 	exit(1);
 }

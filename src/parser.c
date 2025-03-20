@@ -700,11 +700,6 @@ static int AddLogExpr(struct parser *parser)
 			else if (parser->input == KW_XOR) {
 				parser->op = OP_XOR;
 			}
-			else {
-				parser->error = X584ASM_OP_EXPECTED;
-				parser->non_fail = true;
-				return 0;
-			}
 			Consume(parser);
 
 			term = Term(parser);
@@ -881,6 +876,7 @@ static int ShiftExpr(struct parser *parser)
 static int Carry(struct parser *parser)
 {
 	int result = 0;
+	bool has = false;
 
 	if (!Match(parser, '('))
 		return 0;
@@ -908,11 +904,23 @@ static int Carry(struct parser *parser)
 			Fail(parser, X584ASM_INVALID_CARRY_VAL);
 			Consume(parser);
 		}
+		has = true;
+	} 
+	else if (parser->input != ')') {
+		Fail(parser, X584ASM_INVALID_CARRY_VAL);
+		Consume(parser);
+		has = true;
 	}
+
 	if (!Match(parser, ')')) {
 		parser->error = X584ASM_RPAR_EXPECTED;
 		parser->non_fail = true;
 		return 0;
+	}
+	else if (!has) {
+		Fail(parser, X584ASM_INVALID_CARRY_VAL);
+		Consume(parser);
+		has = true;
 	}
 	return result;
 }
@@ -947,7 +955,7 @@ static int Label(struct parser *parser)
 
 
 	if (!Match(parser, ':')) {
-		parser->error = X584ASM_COLON_EXPECTED;
+		parser->error = X584ASM_UNEXPECTED_WORD;
 		parser->non_fail = true;
 		return 0;
 	}
@@ -979,7 +987,7 @@ static int32_t GotoAddress(struct parser *parser)
 		Consume(parser);
 	}
 	else {
-		Fail(parser, X584ASM_LABEL_EXPECTED);
+		Fail(parser, X584ASM_LABEL_OR_ADDRESS_EXPECTED);
 		label = INPUT_EOF;
 	}
 
