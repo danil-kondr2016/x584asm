@@ -16,7 +16,7 @@
 #include <windows.h>
 #endif
 
-#define X584ASM_VERSION "v0.2.5"
+#define X584ASM_VERSION "v0.2.6"
 
 const char compiled[] = __DATE__ " " __TIME__;
 const char version[] = X584ASM_VERSION;
