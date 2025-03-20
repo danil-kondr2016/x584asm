@@ -493,7 +493,7 @@ static int Assign(struct parser *parser)
 	if (!Variable(parser)) {
 		return 0;
 	}
-	if (!Match(parser, RUNE_ASSIGN) || !Match(parser, '=')) {
+	if (!Match(parser, RUNE_ASSIGN) && !Match(parser, '=')) {
 		return 0;
 	}
 	if (!Expr(parser)) {

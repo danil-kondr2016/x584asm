@@ -6,7 +6,6 @@
 static const char *_errors[] = {
 	[X584ASM_COMMA_EXPECTED] = "',' expected",
 	[X584ASM_TOO_MANY_LABELS] = "Too many labels (more than 1024)",
-	[X584ASM_COLON_EXPECTED] = "':' expected",
 	[X584ASM_EMPTY_EXPECTED] = "<ПУСТО> expected",
 	[X584ASM_FLAG_EXPECTED] = "Flag expected (ПАЛУ0,ПАЛУ1,ПАЛУ2,ПАЛУ3,!СДЛ1,!СДП1,!СДЛ2,!СДП2,РРР0,РРР3,А15,В15)",
 	[X584ASM_INVALID_ADDRESS] = "Invalid address",

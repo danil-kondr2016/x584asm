@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "utf8proc.h"
+#include "x584err.h"
 
 int reader_open(struct reader *r, char *u8path)
 {
