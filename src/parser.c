@@ -1191,10 +1191,10 @@ static int Annotation(struct parser *parser)
 	sds temp;
 	int n = 0;
 
-	if (!annotation) Die(X584ASM_OUT_OF_MEMORY);
+	if (!annotation) Die(X584ASM_FATAL_OUT_OF_MEMORY);
 	if (parser->input == RUNE_ANNOTATION) { 
 		temp = sdscatsds(annotation, parser->token);
-		if (!temp) Die(X584ASM_OUT_OF_MEMORY);
+		if (!temp) Die(X584ASM_FATAL_OUT_OF_MEMORY);
 		annotation = temp;
 		Consume(parser);
 		program_move_annotation(parser->program, parser->address, annotation);

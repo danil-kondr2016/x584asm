@@ -5,12 +5,8 @@
 
 static const char *_errors[] = {
 	[X584ASM_FATAL_OUT_OF_MEMORY] = "Fatal error: out of memory",
-	[X584ASM_PREMATURE_END_OF_LINE] = "Premature end of line",
-	[X584ASM_INVALID_ESCAPE_SEQUENCE] = "Invalid escape sequence",
 	[X584ASM_COMMA_EXPECTED] = "',' expected",
 	[X584ASM_TOO_MANY_LABELS] = "Too many labels (more than 1024)",
-	[X584ASM_NO_LABELS_SPECIFIED] = "No labels specified",
-	[X584ASM_WORD_EXPECTED] = "Word expected",
 	[X584ASM_COLON_EXPECTED] = "':' expected",
 	[X584ASM_EMPTY_EXPECTED] = "<ПУСТО> expected",
 	[X584ASM_FLAG_EXPECTED] = "Flag expected (ПАЛУ0,ПАЛУ1,ПАЛУ2,ПАЛУ3,!СДЛ1,!СДП1,!СДЛ2,!СДП2,РРР0,РРР3,А15,В15)",
@@ -22,7 +18,6 @@ static const char *_errors[] = {
 	[X584ASM_LABEL_OR_ADDRESS_EXPECTED] = "Label or address expected",
 	[X584ASM_LPAR_EXPECTED] = "'(' expected",
 	[X584ASM_OP_EXPECTED] = "Operator expected ('+','-','and','or','xor')",
-	[X584ASM_PREMATURE_EOF] = "Premature end of file",
 	[X584ASM_RPAR_EXPECTED] = "')' expected",
 	[X584ASM_TERM_EXPECTED] = "Argument expected (РОН0-РОН7,РР,РРР,ШИНвх,Швх,П)",
 	[X584ASM_THEN_EXPECTED] = "'then' or 'то' expected",
