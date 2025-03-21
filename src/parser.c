@@ -394,13 +394,101 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	case REG_NXWR: flag = sub ? ARG_SUB_NXWR : ARG_ADD_NXWR; id = REG_XWR; break;
 	case REG_NDIP: flag = sub ? ARG_SUB_NDIP : ARG_ADD_NDIP; id = REG_DIP; break;
 	case REG_1: flag = sub ? ARG_SUB_1 : ARG_ADD_1; id = 0; break;
-	case REG_0: flag = ARG_0; id = 0; break;
+	case REG_0: flag = sub ? ARG_SUB_0 : ARG_ADD_0; id = 0; break;
 	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; carry = 1; break;
 	case REG_NC: flag = sub ? ARG_SUB_NC : ARG_ADD_NC; id = 0; carry = 1; break;
 	}
 
-	if ((flag > -1) && parser->arg_add & (1 << flag)) {
+	if ((flag == ARG_SUB_REG) 
+		&& (parser->arg_add & ARG(ADD_REG))
+		&& !(parser->arg_add & ARG(SUB_REG)))
+	{
+		if (id != parser->reg) {
+			parser->invalid_instruction = true;
+			parser->error = X584ASM_INVALID_OPCODE;
+		}
+		else
+			parser->arg_add &= ~ARG(ADD_REG);
+	}
+	else if ((flag == ARG_ADD_REG)
+		&& (parser->arg_add & ARG(SUB_REG))
+		&& !(parser->arg_add & ARG(ADD_REG)))
+	{
+		if (id != parser->reg) {
+			parser->invalid_instruction = true;
+			parser->error = X584ASM_INVALID_OPCODE;
+		}
+		else {
+			parser->arg_add &= ~ARG(SUB_REG);
+		}
+	}
+	else if ((flag == ARG_ADD_NREG)
+		&& (parser->arg_add & (ARG(ADD_REG)|ARG(SUB_REG)|ARG(SUB_NREG)))
+		&& !(parser->arg_add & ARG(ADD_NREG))
+		&& (id != parser->reg)) 
+	{
 		parser->invalid_instruction = true;
+		parser->error = X584ASM_INVALID_OPCODE;
+	}
+	else if ((flag == ARG_SUB_NREG)
+		&& (parser->arg_add & (ARG(ADD_REG)|ARG(SUB_REG)|ARG(ADD_NREG)))
+		&& !(parser->arg_add & ARG(SUB_NREG))
+		&& (id != parser->reg)) 
+	{
+		parser->invalid_instruction = true;
+		parser->error = X584ASM_INVALID_OPCODE;
+	}
+	else if (flag == ARG_SUB_NC && (parser->arg_add & ARG(ADD_NC))) {
+		parser->arg_add &= ~ARG(SUB_NC);
+	}
+	else if (flag == ARG_ADD_NC && (parser->arg_add & ARG(SUB_NC))) {
+		parser->arg_add &= ~ARG(ADD_NC);
+	}
+	else if (flag == ARG_ADD_C && (parser->arg_add & ARG(SUB_C))) {
+		parser->arg_add &= ~ARG(ADD_C);
+	}
+	else if (flag == ARG_SUB_C && (parser->arg_add & ARG(ADD_C))) {
+		parser->arg_add &= ~ARG(ADD_C);
+	}
+	else if (flag == ARG_ADD_DIP && (parser->arg_add & ARG(SUB_DIP))) {
+		parser->arg_add &= ~ARG(ADD_DIP);
+	}
+	else if (flag == ARG_SUB_DIP && (parser->arg_add & ARG(ADD_DIP))) {
+		parser->arg_add &= ~ARG(SUB_DIP);
+	}
+	else if (flag == ARG_ADD_NDIP && (parser->arg_add & ARG(SUB_NDIP))) {
+		parser->arg_add &= ~ARG(ADD_NDIP);
+	}
+	else if (flag == ARG_SUB_NDIP && (parser->arg_add & ARG(ADD_NDIP))) {
+		parser->arg_add &= ~ARG(SUB_NDIP);
+	}
+	else if (flag == ARG_ADD_WR && (parser->arg_add & ARG(SUB_WR))) {
+		parser->arg_add &= ~ARG(ADD_WR);
+	}
+	else if (flag == ARG_SUB_WR && (parser->arg_add & ARG(ADD_WR))) {
+		parser->arg_add &= ~ARG(SUB_WR);
+	}
+	else if (flag == ARG_ADD_NWR && (parser->arg_add & ARG(SUB_NWR))) {
+		parser->arg_add &= ~ARG(ADD_NWR);
+	}
+	else if (flag == ARG_SUB_NWR && (parser->arg_add & ARG(ADD_NWR))) {
+		parser->arg_add &= ~ARG(SUB_NWR);
+	}
+	else if (flag == ARG_ADD_XWR && (parser->arg_add & ARG(SUB_XWR))) {
+		parser->arg_add &= ~ARG(ADD_XWR);
+	}
+	else if (flag == ARG_SUB_XWR && (parser->arg_add & ARG(ADD_XWR))) {
+		parser->arg_add &= ~ARG(SUB_XWR);
+	}
+	else if (flag == ARG_ADD_NXWR && (parser->arg_add & ARG(SUB_NXWR))) {
+		parser->arg_add &= ~ARG(ADD_NXWR);
+	}
+	else if (flag == ARG_SUB_NXWR && (parser->arg_add & ARG(ADD_NXWR))) {
+		parser->arg_add &= ~ARG(SUB_NXWR);
+	}
+	else if ((flag > -1) && parser->arg_add & (1 << flag)) {
+		parser->invalid_instruction = true;
+		parser->error = X584ASM_INVALID_OPCODE;
 	}
 	else if (id == REG_INVALID) {
 		parser->invalid_instruction = true;
@@ -877,6 +965,9 @@ static int Carry(struct parser *parser)
 {
 	int result = 0;
 	bool has = false;
+
+	if (parser->carry != CARRY_INDEFINITE)
+		return 0;
 
 	if (!Match(parser, '('))
 		return 0;

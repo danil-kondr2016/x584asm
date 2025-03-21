@@ -79,7 +79,8 @@ enum argument {
 	ARG_SUB_NXWR,
 	ARG_SUB_NDIP,
 	ARG_SUB_NC,
-	ARG_0,
+	ARG_ADD_0,
+	ARG_SUB_0,
 };
 
 #define FLAG(x) (1 << (x))
