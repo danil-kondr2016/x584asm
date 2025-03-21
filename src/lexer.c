@@ -77,6 +77,7 @@ int lexer_init(struct lexer *lexer, struct reader *reader)
 	lexer_register(lexer, "П2", KW_CO2);
 	lexer_register(lexer, "П1", KW_CO1);
 	lexer_register(lexer, "П0", KW_CO0);
+	lexer_register(lexer, "ВхПАЛУ", KW_ALUCIN);
 	lexer_register(lexer, "СДЛ1", KW_SHL1);
 	lexer_register(lexer, "СДЛ2", KW_SHL2);
 	lexer_register(lexer, "СДП1", KW_SHR1);
