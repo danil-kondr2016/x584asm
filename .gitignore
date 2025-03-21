@@ -6,3 +6,8 @@
 *.dll
 *.obj
 *.dep
+obj/
+results/
+*.un~
+*.swp
+*~
