@@ -1,6 +1,6 @@
-ISC License
+# [ISC License](https://spdx.org/licenses/ISC)
 
-Copyright 2025 Danila A. Kondratenko
+Copyright (c) 2025 Danila A. Kondratenko
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
