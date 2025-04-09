@@ -16,12 +16,30 @@
 #include <windows.h>
 #endif
 
-#define X584ASM_VERSION "v0.2.8"
+#define X584ASM_VERSION "v0.2.9"
 
-const char compiled[] = __DATE__ " " __TIME__;
-const char version[] = X584ASM_VERSION;
-const char banner[] = "This is X584ASM, version %s\n";
-const char banner_ext[] = "This is X584ASM, version %s (compiled %s)\n";
+static const char str_compiled[] = __DATE__ " " __TIME__;
+static const char str_version[] = X584ASM_VERSION;
+static const char str_banner[] = "This is X584ASM, version %s\n";
+static const char str_banner_ext[] = 
+	"This is X584ASM, version %s (compiled %s)\n";
+
+void help()
+{
+	puts("Usage: x584asm [options] input");
+	puts("Options:");
+	puts("    -h | --help              Print short help");
+	puts("    -v | --version           Show version of X584ASM");
+	puts("    -o | --output [outfile]  Set output file name"); 
+	puts("                             (by default it is "
+					   "derived from input name)");
+}
+
+void version()
+{
+	printf(str_banner_ext, str_version, str_compiled);
+	puts("Copyright (c) Danila A. Kondratenko, 2025");
+}
 
 int u8main(int argc, char **argv)
 {
@@ -30,20 +48,25 @@ int u8main(int argc, char **argv)
 	struct lexer lexer = {0};
 	struct parser parser = {0};
 	struct optparse opt = {0};
+	const struct optparse_long long_options[] = {
+		{ "output", 'o', OPTPARSE_REQUIRED },
+		{ "help",   'h', OPTPARSE_NONE     },
+		{ "version",'v', OPTPARSE_NONE     },
+		{0}
+	};
 
 	char *input = NULL;
 	char *output = NULL;
 	int option;
 
 	optparse_init(&opt, argv);
-	while ((option = optparse(&opt, "ho:v")) != -1) {
+	while ((option = optparse_long(&opt, long_options, NULL)) != -1) {
 		switch (option) {
 		case 'h':
-			printf("Usage: x584asm [-h|-v] input [-o output]\n");
+			help();
 			return 0;
 		case 'v':
-			printf(banner_ext, version, compiled);
-			puts("Copyright (c) Danila A. Kondratenko, 2025");
+			version();
 			return 0;
 		case 'o':
 			output = opt.optarg;
@@ -54,7 +77,7 @@ int u8main(int argc, char **argv)
 		}
 	}
 
-	printf(banner, version);
+	printf(str_banner, str_version);
 	input = optparse_arg(&opt);
 	if (!input) {
 		Die(X584ASM_FATAL_INPUT_NOT_SPECIFIED);
