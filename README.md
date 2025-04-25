@@ -1,6 +1,3 @@
-> [!CAUTION]
-> Репозиторий перенесён в Gitflic: <https://gitflic.ru/project/danila-kondr/x584asm>
-
 # Ассемблер для X584ASM
 
 Программа X584ASM является ассемблером для эмулятора
