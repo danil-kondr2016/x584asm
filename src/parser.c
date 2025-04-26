@@ -735,14 +735,17 @@ static int Opcode(struct parser *parser)
 static int AddLogExpr(struct parser *parser)
 {
 	int term;
+	bool unary_minus = false;
 
+	if (Match(parser, '-'))
+		unary_minus = true;
 	term = Term(parser);
 	if (!term)
 		return 0;
 
 	parser->arg_add = 0;
 	parser->reg = 0;
-	AddRegister(parser, term, 0);
+	AddRegister(parser, term, unary_minus ? 1 : 0);
 	do {
 		if (parser->input == '+' || parser->input == '-') {
 			int sub = parser->input == '+' ? 0 : 1;
