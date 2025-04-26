@@ -773,7 +773,15 @@ static int AddLogExpr(struct parser *parser)
 			}
 			AddRegister(parser, term, sub);
 		}
-		else if (parser->input == KW_AND || parser->input == KW_OR || parser->input == KW_XOR) {
+		else if (parser->input == KW_AND 
+				|| parser->input == KW_OR 
+				|| parser->input == KW_XOR) {
+			if (unary_minus) {
+				// found logical expression, invalid
+				parser->error = X584ASM_SYNTAX_ERROR;
+				parser->non_fail = true;
+				return 0;
+			}
 			if (parser->op != OP_NONE) {
 				return 0;
 			}
