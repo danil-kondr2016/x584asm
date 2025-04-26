@@ -63,6 +63,7 @@ struct opcode_data {
 #define ALU(_var, _a, _b, _x) \
 	{ARG(ADD_NC), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0000|(_x)},\
 	{ARG(ADD_0),  VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0000|(_x)},\
+	{ARG(ADD_N0), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0000|(_x)},\
 	\
 	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0040|(_x)},\
 	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0040|(_x)},\

@@ -53,6 +53,7 @@ enum reg {
 	REG_NC,
 	REG_1,
 	REG_0,
+	REG_N0,
 	REG_INVALID,
 };
 
@@ -81,6 +82,8 @@ enum argument {
 	ARG_SUB_NC,
 	ARG_ADD_0,
 	ARG_SUB_0,
+	ARG_ADD_N0,
+	ARG_SUB_N0,
 };
 
 #define FLAG(x) (1 << (x))

@@ -395,6 +395,7 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 	case REG_NDIP: flag = sub ? ARG_SUB_NDIP : ARG_ADD_NDIP; id = REG_DIP; break;
 	case REG_1: flag = sub ? ARG_SUB_1 : ARG_ADD_1; id = 0; break;
 	case REG_0: flag = sub ? ARG_SUB_0 : ARG_ADD_0; id = 0; break;
+	case REG_N0: flag = sub ? ARG_SUB_N0 : ARG_ADD_N0; id = 0; break;
 	case REG_C: flag = sub ? ARG_SUB_C : ARG_ADD_C; id = 0; carry = 1; break;
 	case REG_NC: flag = sub ? ARG_SUB_NC : ARG_ADD_NC; id = 0; carry = 1; break;
 	}
@@ -560,6 +561,8 @@ static int Term(struct parser *parser)
 		else if (Match(parser, KW_XWR)) { result = REG_NXWR; }
 		else if (Match(parser, KW_DIP)) { result = REG_NDIP; }
 		else if (Match(parser, KW_C)) { result = REG_NC; }
+		else if (parser->input == RUNE_NUMBER && parser->token[0] == '0' && !parser->token[1])
+			{ result = REG_N0; Consume(parser); }
 		else { Back(parser); }
 	}
 	else if (parser->input == RUNE_NUMBER || parser->input == RUNE_HEX) {
