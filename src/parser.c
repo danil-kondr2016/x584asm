@@ -10,55 +10,6 @@
 #include "opcodes.h"
 #include <utf8proc.h>
 
-/*
- * Grammar of language:
- *
- * program = [label-decl] {instruction}
- *
- * instruction = [<label> ':'] opcode [ operator [ annotation ] ]
- *
- * opcode = [break] command 
- *
- * command = <halt> | <nop> | assign | xassign
- *
- * assign = variable ":=" expr carry
- *
- * variable = "РОН0"|"РОН1"|"РОН2"|"РОН3"|"РОН4"|"РОН5"|"РОН6"|"РОН7"|"РР"|"РРР"|"ШИНвых"
- *
- * expr = logexpr | nxorexpr | addexpr | shiftexpr
- *
- * logexpr = term logop term
- *
- * nxorexpr = '!' '(' term "xor" term ')'
- * 
- * term = reg | "П" | "!" term
- *
- * reg = "РОН0"|"РОН1"|"РОН2"|"РОН3"|"РОН4"|"РОН5"|"РОН6"|"РОН7"|"РР"|"РРР"|"ШИНвх"
- *
- * logop = "and"|"or"|"xor"
- *
- * addexpr = term { ('+' | '-' term) }
- *
- * shiftexpr = shiftop '(' addexpr ')'
- *
- * shiftop = "СЛЛ"|"СЛП"|"САЛ"|"САП"|"СЦЛ"|"СЦП"
- *
- * xassign = '(' "WR" "," "XWR" ")" ":=" shiftop '(' addexpr ',' "XWR" ')'
- *
- * carry = '(' <carry> '=' ('0' | '1') ')'
- *
- * operator = conditional | goto | input
- *
- * conditional = <if> <flag> <then> (<number>|<label>) [ <else> (<number>|<label>) ]
- *
- * goto = <goto> (<number>|<label>)
- *
- * input = <input> (<hex>|<number>|'-' <number>|<number> <number> <number> <number>)
- *
- * annotation = <string> {<string>}
- *
- */
-
 static int32_t Consume(struct parser *parser);
 static int Back(struct parser *parser);
 static int Match(struct parser *parser, int32_t rune);
