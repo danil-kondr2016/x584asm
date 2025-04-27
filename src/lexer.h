@@ -39,7 +39,7 @@ enum keyword_type {
 };
 
 struct keyword {
-	sds word;
+	char *word;
 	int32_t value;
 };
 

@@ -174,7 +174,13 @@ int lexer_register(struct lexer *lexer, char *word, int32_t value)
 	if (lexer->keywords_count >= N_KEYWORDS)
 		return -1;
 
-	lexer->keywords[lexer->keywords_count].word = sdsnew(word);
+	utf8proc_uint8_t *casefolded_word;
+
+	casefolded_word = utf8proc_NFKC_Casefold(word);
+	if (!casefolded_word)
+		Die(X584ASM_FATAL_OUT_OF_MEMORY);
+
+	lexer->keywords[lexer->keywords_count].word = casefolded_word;
 	lexer->keywords[lexer->keywords_count].value = value;
 	return lexer->keywords_count++;
 }
@@ -453,23 +459,19 @@ static int32_t _word(struct lexer *lexer, sds *token)
 	if (ret == INPUT_ERROR)
 		return INPUT_ERROR;
 
-	utf8proc_uint8_t *norm_token, *norm_keyword;
+	utf8proc_uint8_t *norm_token;
 	norm_token = utf8proc_NFKC_Casefold(*token);
 	for (int i = 0; i < lexer->keywords_count; i++) {
 		char *keyword = lexer->keywords[i].word;
-		norm_keyword = utf8proc_NFKC_Casefold(keyword);
-		if (strcmp(norm_token, norm_keyword) == 0) {
+		if (strcmp(norm_token, keyword) == 0) {
 			result = lexer->keywords[i].value;
 			// We don't need string token anymore
 			sdsfree(*token);
 			*token = NULL;
 			break;
 		}
-		free(norm_keyword);
-		norm_keyword = NULL;
 	}
-	if (norm_keyword)
-		free(norm_keyword);
+
 	free(norm_token);
 	return result;
 }
@@ -539,7 +541,7 @@ static int32_t _annotation(struct lexer *lexer, sds *token)
 int lexer_free(struct lexer *lexer)
 {
 	for (int i = 0; i < N_KEYWORDS; i++) {
-		sdsfree(lexer->keywords[i].word);
+		free(lexer->keywords[i].word);
 	}
 	memset(lexer, 0, sizeof(struct lexer));
 }
