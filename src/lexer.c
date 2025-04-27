@@ -28,6 +28,7 @@ static inline int _is_newline(int32_t codepoint)
 	case UTF8PROC_CATEGORY_ZL:
 	case UTF8PROC_CATEGORY_ZP:
 		return 1;
+	default:;
 	}
 	return 0;
 }
