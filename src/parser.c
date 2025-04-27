@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NOP 154
-
 #include "opcodes.h"
 #include <utf8proc.h>
 
@@ -234,9 +232,6 @@ static int Instruction(struct parser *parser)
 	}
 	Label(parser);
 
-	bool valid_opcode = false;
-	bool valid_annotation = false;
-	bool valid_operator = false;
 	state = 1;
 	do {
 		switch (state) {
@@ -244,7 +239,6 @@ static int Instruction(struct parser *parser)
 			ret = Opcode(parser);
 			if (!ret)
 				break;
-			valid_opcode = !parser->invalid_instruction;
 			state = 2;
 			break;
 		case 2:
@@ -322,7 +316,6 @@ static int Instruction(struct parser *parser)
 static int AddRegister(struct parser *parser, uint8_t id, int sub)
 {
 	int flag = -1;
-	int invalid = 0;
 	int carry = 0;
 
 	switch (id) {
@@ -622,19 +615,18 @@ static int Expr(struct parser *parser)
 {
 	int ret;
 
-	if (ret = AddLogExpr(parser))
+	if ((ret = AddLogExpr(parser)) != 0)
 		return ret;
-	else if (ret = NXorExpr(parser))
+	else if ((ret = NXorExpr(parser)) != 0)
 		return ret;
-	else if (ret = ShiftExpr(parser))
+	else if ((ret = ShiftExpr(parser)) != 0)
 		return ret;
 	return 0;
 }
 
 static int Opcode(struct parser *parser)
 {
-	int brk = 0, carry = 0, carry_val = 0;
-	int invalid = 0;
+	int brk = 0;
 	int ret = 0;
 
 	if (Match(parser, KW_BREAK)) {
@@ -766,9 +758,6 @@ static int AddLogExpr(struct parser *parser)
 			break;
 		}
 		else {
-			utf8proc_category_t category;
-
-			category = utf8proc_category(parser->input);
 			switch (parser->input) {
 			case ',': // maybe , РРР)
 				if (parser->op != OP_SHL_X && parser->op != OP_SHR_X
@@ -998,7 +987,6 @@ static int RegisterLabel(struct parser *parser)
 
 static int Label(struct parser *parser)
 {
-	int no_label = 0;
 	int label = 0;
 
 	if (parser->input == RUNE_WORD) {
@@ -1253,7 +1241,6 @@ static int Annotation(struct parser *parser)
 {
 	sds annotation = sdsempty();
 	sds temp;
-	int n = 0;
 
 	if (!annotation) Die(X584ASM_FATAL_OUT_OF_MEMORY);
 	if (parser->input == RUNE_ANNOTATION) { 
@@ -1273,7 +1260,7 @@ static int Annotation(struct parser *parser)
 
 static int GenerateOpcode(struct parser *parser)
 {
-	int opcode, tmp;
+	int opcode;
 #ifdef _DEBUG_FIND
 	printf("@ OP VR ARGS_ADD A1 A2 RG BK CY OPCODE\n");
 	printf("@ %2d %2d %08X %2d %2d %2d %2d %2d ---\n",

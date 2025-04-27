@@ -356,7 +356,6 @@ static int32_t _collect(struct lexer *lexer, sds *token, codepoint_cb cb)
 	int end = 0;
 	int32_t result;
 	int32_t input = 0;
-	utf8proc_category_t category;
 	utf8proc_uint8_t utf8[4];
 	utf8proc_ssize_t count;
 	sds tmp;
