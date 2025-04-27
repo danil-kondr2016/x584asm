@@ -1023,7 +1023,7 @@ static int32_t GotoAddress(struct parser *parser)
 		}
 		Consume(parser);
 	}
-	else if (label = MatchLabel(parser)) {
+	else if ((label = MatchLabel(parser)) != 0) {
 		label = LABEL_ID(label) + LABEL_FIRST;
 	}
 	else if (parser->input == RUNE_WORD) {

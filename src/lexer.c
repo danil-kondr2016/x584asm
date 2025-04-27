@@ -549,4 +549,6 @@ int lexer_free(struct lexer *lexer)
 		free(lexer->keywords[i].word);
 	}
 	memset(lexer, 0, sizeof(struct lexer));
+
+	return 1;
 }
