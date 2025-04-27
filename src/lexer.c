@@ -181,9 +181,9 @@ int lexer_register(struct lexer *lexer, char *word, int32_t value)
 	if (lexer->keywords_count >= N_KEYWORDS)
 		return -1;
 
-	utf8proc_uint8_t *casefolded_word;
+	char *casefolded_word;
 
-	casefolded_word = utf8proc_NFKC_Casefold(word);
+	casefolded_word = (char *)utf8proc_NFKC_Casefold((uint8_t *)word);
 	if (!casefolded_word)
 		Die(X584ASM_FATAL_OUT_OF_MEMORY);
 
@@ -464,8 +464,8 @@ static int32_t _word(struct lexer *lexer, sds *token)
 	if (ret == INPUT_ERROR)
 		return INPUT_ERROR;
 
-	utf8proc_uint8_t *norm_token;
-	norm_token = utf8proc_NFKC_Casefold(*token);
+	char *norm_token;
+	norm_token = (char *)utf8proc_NFKC_Casefold((uint8_t *)*token);
 	for (int i = 0; i < lexer->keywords_count; i++) {
 		char *keyword = lexer->keywords[i].word;
 		if (strcmp(norm_token, keyword) == 0) {

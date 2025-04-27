@@ -60,9 +60,9 @@ static int transcode(char *src, char *dst, int size)
 	if (!size)
 		return 0;
 
-	for (pos = utf8proc_iterate(src, -1, &rune); 
+	for (pos = utf8proc_iterate((uint8_t*)src, -1, &rune); 
 		rune; 
-		pos += utf8proc_iterate(&src[pos], -1, &rune))
+		pos += utf8proc_iterate((uint8_t*)&src[pos], -1, &rune))
 	{
 		dst[len++] = rune_to_cp1251(rune);
 		if (len >= size)

@@ -13,7 +13,7 @@
 struct reader {
 	int32_t ungetc[READER_BUF_SIZE];
 	char buf[READER_BUF_SIZE];
-	char u8buf[4];
+	uint8_t u8buf[4];
 	short temp;
 	short reserved;
 	FILE *file;
