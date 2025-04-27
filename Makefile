@@ -4,6 +4,7 @@ SOURCES:=$(shell find src/ -name "*.c")
 OBJECTS:=$(patsubst src/%.c,obj/%.o,$(SOURCES))
 DEPFILES:=$(patsubst %.c,%.dep,$(SOURCES))
 
+CFLAGS=-Wall
 CPPFLAGS=-Iinclude/ -DUTF8PROC_STATIC
 
 x584asm: $(OBJECTS)
