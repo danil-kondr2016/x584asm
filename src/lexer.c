@@ -5,7 +5,14 @@
 #include <string.h>
 #include <assert.h>
 
-static int _is_newline(int32_t codepoint)
+static inline int _is_hex_digit(int32_t x)
+{
+	return (x >= '0' && x <= '9') 
+		|| (x >= 'A' && x <= 'F')
+		|| (x >= 'a' && x <= 'f');
+}
+
+static inline int _is_newline(int32_t codepoint)
 {
 	utf8proc_category_t category;
 	if (codepoint == '\n')
@@ -424,9 +431,7 @@ static int32_t _hex_cb(struct lexer *lexer, sds *token)
 {
 	if (lexer->input == INPUT_NOT_SAVED)
 		_l_getc(lexer);
-	if (lexer->input >= '0' && lexer->input <= '9'
-		|| lexer->input >= 'A' && lexer->input <= 'F'
-		|| lexer->input >= 'a' && lexer->input <= 'f')
+	if (_is_hex_digit(lexer->input))
 	{
 		int32_t result = lexer->input;
 		lexer->input = INPUT_NOT_SAVED;
