@@ -16,6 +16,8 @@
 #include <windows.h>
 #endif
 
+#include <string.h>
+
 #define X584ASM_VERSION "v0.2.11"
 
 static const char str_compiled[] = __DATE__ " " __TIME__;
