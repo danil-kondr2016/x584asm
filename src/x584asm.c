@@ -121,10 +121,12 @@ int u8main(int argc, char **argv)
 		else {
 			printf("Output written on %s\n", output);
 		}
+		program_free(&program);
 		return ret ? 0 : 1;
 	}
 	else {
 		puts("No output file.");
+		program_free(&program);
 	}
 
 	return 1;

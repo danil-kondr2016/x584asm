@@ -147,12 +147,17 @@ int program_set_annotation(struct program *program, int address, char *annotatio
 	return 1;
 }
 
-int program_move_annotation(struct program *program, int address, sds annotation)
+int program_move_annotation(struct program *program, int address, sds *p_annotation)
 {
+	sds annotation;
+	if (!p_annotation)
+		return 0;
 	if (!program)
 		return 0;
 	if (address < 0 || address >= N_INSTRUCTIONS)
 		return 0;
+
+	annotation = *p_annotation;
 
 	if (program->annotation[address]) {
 		sdsfree(program->annotation[address]);
@@ -163,6 +168,16 @@ int program_move_annotation(struct program *program, int address, sds annotation
 		program->annotation[address] = annotation;
 	}
 
+	*p_annotation = NULL;
+
 	return 1;
 }
 
+int program_free(struct program *program)
+{
+	for (int i = 0; i < N_INSTRUCTIONS; i++) {
+		sdsfree(program->annotation[i]);
+	}
+	memset(program, 0, sizeof(struct program));
+	return 1;
+}

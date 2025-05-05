@@ -1248,7 +1248,7 @@ static int Annotation(struct parser *parser)
 		if (!temp) Die(X584ASM_FATAL_OUT_OF_MEMORY);
 		annotation = temp;
 		Consume(parser);
-		program_move_annotation(parser->program, parser->address, annotation);
+		program_move_annotation(parser->program, parser->address, &annotation);
 	}
 	else {
 		return 0;

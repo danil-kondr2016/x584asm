@@ -53,7 +53,8 @@ int program_set_if(struct program *program, int address, int32_t flag, int32_t a
 int program_set_goto(struct program *program, int address, int32_t a_goto);
 int program_set_input(struct program *program, int address, int value);
 int program_set_annotation(struct program *program, int address, char *annotation);
-int program_move_annotation(struct program *program, int address, sds annotation);
+int program_move_annotation(struct program *program, int address, sds *p_annotation);
 int program_output(struct program *program, char *u8path);
+int program_free(struct program *program);
 
 #endif
