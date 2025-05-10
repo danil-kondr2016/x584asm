@@ -990,6 +990,8 @@ static int Label(struct parser *parser)
 {
 	int label = 0;
 
+	if (parser->input == INPUT_NOT_SAVED)
+		Consume(parser);
 	if (parser->input == RUNE_WORD) {
 		label = RegisterLabel(parser);
 		Consume(parser);
