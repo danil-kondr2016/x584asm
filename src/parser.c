@@ -630,6 +630,7 @@ static int Opcode(struct parser *parser)
 	int ret = 0;
 
 	if (Match(parser, KW_BREAK)) {
+		parser->brk = true;
 		brk = 1;
 	}
 
@@ -1327,7 +1328,7 @@ static int GenerateOpcode(struct parser *parser)
 	}
 
 	if (parser->invalid_instruction) {
-		program_set_opcode(parser->program, parser->address, 0777, 1, 0);
+		program_set_opcode(parser->program, parser->address, NOP2, 1, 0);
 		parser->is_program_valid = false;
 		return 0;
 	}
