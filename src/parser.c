@@ -104,7 +104,7 @@ static int MatchLabel(struct parser *parser)
 	if (IS_RUNE_LABEL(parser->input)) {
 		int label = parser->input;
 		Consume(parser);
-		return label;
+		return LABEL_ID(label) + LABEL_FIRST;
 	}
 	else {
 		return 0;
@@ -1027,7 +1027,7 @@ static int32_t GotoAddress(struct parser *parser)
 		Consume(parser);
 	}
 	else if ((label = MatchLabel(parser)) != 0) {
-		label = LABEL_ID(label) + LABEL_FIRST;
+		label = LABEL_ID(label);
 	}
 	else if (parser->input == RUNE_WORD) {
 		label = RegisterLabel(parser);

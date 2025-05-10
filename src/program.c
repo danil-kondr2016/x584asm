@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "lexer.h"
+#include <assert.h>
 
 int program_init(struct program *program)
 {
@@ -25,14 +26,11 @@ int program_init(struct program *program)
 
 int program_set_label(struct program *program, int label, int address)
 {
-	if (!program)
-		return 0;
-	if (label < 0 || label >= MAX_LABELS)
-		return 0;
-	if (address < 0 || address >= N_INSTRUCTIONS)
-		return 0;
+	assert(program);
+	assert(label >= LABEL_FIRST && label < LABEL_NEXT);
+	assert(address >= 0 && address < N_INSTRUCTIONS);
 
-	program->label[label] = address;
+	program->label[label - LABEL_FIRST] = address;
 	return 1;
 }
 
@@ -40,10 +38,8 @@ int program_set_opcode(struct program *program, int address, int opcode, int brk
 {
 	unsigned flags = 0;
 
-	if (!program)
-		return 0;
-	if (address < 0 || address >= N_INSTRUCTIONS)
-		return 0;
+	assert(program);
+	assert(address >= 0 && address < N_INSTRUCTIONS);
 
 	if (brk)
 		flags |= ATTR_BREAK;
@@ -66,14 +62,10 @@ int program_set_if(struct program *program, int address, int32_t flag, int32_t a
 {
 	int32_t tmp = 0;
 
-	if (!program)
-		return 0;
-	if (address < 0 || address >= N_INSTRUCTIONS)
-		return 0;
-	if (a_then < 0 || a_then > LABEL_NEXT)
-		return 0;
-	if (a_else < 0 || a_else > LABEL_NEXT)
-		return 0;
+	assert(program);
+	assert(address >= 0 && address < N_INSTRUCTIONS);
+	assert(a_then >= 0 || a_then <= LABEL_NEXT);
+	assert(a_else >= 0 || a_else <= LABEL_NEXT);
 
 	switch (flag) {
 	case KW_SHL1: case KW_SHL2: case KW_SHR1: case KW_SHR2:
@@ -100,12 +92,9 @@ int program_set_if(struct program *program, int address, int32_t flag, int32_t a
 
 int program_set_goto(struct program *program, int address, int32_t a_goto)
 {
-	if (!program)
-		return 0;
-	if (address < 0 || address >= N_INSTRUCTIONS)
-		return 0;
-	if (a_goto < 0 || a_goto > LABEL_NEXT)
-		return 0;
+	assert(program);
+	assert(address >= 0 && address < N_INSTRUCTIONS);
+	assert(a_goto >= 0 && a_goto <= LABEL_NEXT);
 
 	program->control[address].type = KW_GOTO;
 	program->control[address].Goto.a_goto = a_goto;
@@ -114,12 +103,10 @@ int program_set_goto(struct program *program, int address, int32_t a_goto)
 
 int program_set_input(struct program *program, int address, int value)
 {
-	if (!program)
-		return 0;
-	if (address < 0 || address >= N_INSTRUCTIONS)
-		return 0;
-	if (value < -32768 || value > 65535)
-		return 0;
+	assert(program);
+	assert(address >= 0 && address < N_INSTRUCTIONS);
+	assert(value >= -32768 && value <= 65535);
+
 	if (value < 0)
 		value &= 0xFFFF;
 
@@ -130,10 +117,8 @@ int program_set_input(struct program *program, int address, int value)
 
 int program_set_annotation(struct program *program, int address, char *annotation)
 {
-	if (!program)
-		return 0;
-	if (address < 0 || address >= N_INSTRUCTIONS)
-		return 0;
+	assert(program);
+	assert(address >= 0 && address < N_INSTRUCTIONS);
 
 	if (program->annotation[address]) {
 		sdsfree(program->annotation[address]);
@@ -150,12 +135,10 @@ int program_set_annotation(struct program *program, int address, char *annotatio
 int program_move_annotation(struct program *program, int address, sds *p_annotation)
 {
 	sds annotation;
-	if (!p_annotation)
-		return 0;
-	if (!program)
-		return 0;
-	if (address < 0 || address >= N_INSTRUCTIONS)
-		return 0;
+	
+	assert(program);
+	assert(address >= 0 && address < N_INSTRUCTIONS);
+	assert(p_annotation);
 
 	annotation = *p_annotation;
 
