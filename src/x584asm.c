@@ -18,7 +18,7 @@
 
 #include <string.h>
 
-#define X584ASM_VERSION "v0.2.12"
+#define X584ASM_VERSION "v0.2.13"
 
 static const char str_compiled[] = __DATE__ " " __TIME__;
 static const char str_version[] = X584ASM_VERSION;
