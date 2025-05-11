@@ -111,6 +111,55 @@ int lexer_init(struct lexer *lexer, struct reader *reader, bool english_only)
 		lexer_register(lexer, "СТОП", KW_HALT);
 		lexer_register(lexer, "ПУСТО", KW_EMPTY);
 	}
+	else {
+		lexer_register(lexer, "РОН0", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РОН1", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РОН2", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РОН3", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РОН4", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РОН5", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РОН6", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РОН7", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РР", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РРР", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ШИНвх", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ШИНвых", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ЕСЛИ", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ТО", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ИНАЧЕ", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ИДИ_НА", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ПАЛУ3", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ПАЛУ2", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ПАЛУ1", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ПАЛУ0", KW_NOT_ENGLISH);
+		lexer_register(lexer, "П", KW_NOT_ENGLISH);
+		lexer_register(lexer, "П2", KW_NOT_ENGLISH);
+		lexer_register(lexer, "П1", KW_NOT_ENGLISH);
+		lexer_register(lexer, "П0", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ВхПАЛУ", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СДЛ1", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СДЛ2", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СДП1", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СДП2", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РРР0", KW_NOT_ENGLISH);
+		lexer_register(lexer, "РРР3", KW_NOT_ENGLISH);
+		lexer_register(lexer, "А15", KW_NOT_ENGLISH);
+		lexer_register(lexer, "В15", KW_NOT_ENGLISH);
+		lexer_register(lexer, "НОП", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СЛЛ", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СЛП", KW_NOT_ENGLISH);
+		lexer_register(lexer, "САЛ", KW_NOT_ENGLISH);
+		lexer_register(lexer, "САП", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СЦЛ", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СЦП", KW_NOT_ENGLISH);
+		lexer_register(lexer, "и", KW_NOT_ENGLISH);
+		lexer_register(lexer, "или", KW_NOT_ENGLISH);
+		lexer_register(lexer, "искл_или", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ВВОД", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ОСТАНОВ", KW_NOT_ENGLISH);
+		lexer_register(lexer, "СТОП", KW_NOT_ENGLISH);
+		lexer_register(lexer, "ПУСТО", KW_NOT_ENGLISH);
+	}
 
 	lexer_register(lexer, "RF0", KW_RF0);
 	lexer_register(lexer, "RF1", KW_RF1);
@@ -480,6 +529,12 @@ static int32_t _word(struct lexer *lexer, sds *token)
 	}
 
 	free(norm_token);
+
+	if (result == KW_NOT_ENGLISH) {
+		return Error(lexer->line, lexer->col, 
+				X584ASM_NON_ENGLISH_KEYWORD);
+	}
+
 	return result;
 }
 

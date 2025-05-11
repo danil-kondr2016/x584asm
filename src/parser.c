@@ -127,6 +127,9 @@ static void Panic(struct parser *parser, int error)
 	if (parser->input == '=') // if Panic called in this position, it should be invalid
 		Consume(parser);
 
+	if (parser->input == INPUT_ERROR)
+		return;
+
 	while (parser->input != RUNE_ASSIGN
 			&& parser->input != '=' // like ":="
 			&& parser->input != ':' // Maybe label
@@ -222,6 +225,10 @@ static int Instruction(struct parser *parser)
 	parser->invalid_instruction = false;
 	parser->non_fail = false;
 
+	if (parser->input == INPUT_ERROR) {
+		parser->is_program_valid = false;
+		return 0;
+	}
 	if (parser->input == INPUT_EOF) {
 		return 0;
 	}

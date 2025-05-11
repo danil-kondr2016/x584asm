@@ -38,6 +38,7 @@ enum keyword_type {
 	KW_BREAK, KW_HALT,
 	KW_ALUCIN,
 	KW_EMPTY,
+	KW_NOT_ENGLISH,
 };
 
 struct keyword {
