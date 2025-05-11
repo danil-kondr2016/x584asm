@@ -68,22 +68,22 @@ int program_set_if(struct program *program, int address, int32_t flag, int32_t a
 	assert(a_else >= 0 || a_else <= LABEL_NEXT);
 
 	switch (flag) {
-	case KW_SHL1: case KW_SHL2: case KW_SHR1: case KW_SHR2:
-	case ~KW_CO3: case ~KW_CO2: case ~KW_CO1: case ~KW_CO0:
-	case ~KW_XWR0: case ~KW_XWR3: case ~KW_A15: case ~KW_B15:
-		flag = ~flag;
+	case CF_SHL1: case CF_SHL2: case CF_SHR1: case CF_SHR2:
+	case CF_NOT_CO3: case CF_NOT_CO2: case CF_NOT_CO1: case CF_NOT_CO0:
+	case CF_NOT_XWR0: case CF_NOT_XWR3: case CF_NOT_A15: case CF_NOT_B15:
+		flag = flag & ~CF_NOT_FLAG;
 		tmp = a_then;
 		a_then = a_else;
 		a_else = tmp;
-	case ~KW_SHL1: case ~KW_SHL2: case ~KW_SHR1: case ~KW_SHR2:
-	case KW_CO3: case KW_CO2: case KW_CO1: case KW_CO0:
-	case KW_XWR0: case KW_XWR3: case KW_A15: case KW_B15:
+	case CF_NOT_SHL1: case CF_NOT_SHL2: case CF_NOT_SHR1: case CF_NOT_SHR2:
+	case CF_CO3: case CF_CO2: case CF_CO1: case CF_CO0:
+	case CF_XWR0: case CF_XWR3: case CF_A15: case CF_B15:
 		break;
 	default:
 		return 0;
 	}
 
-	program->control[address].type = KW_IF;
+	program->control[address].type = CT_IF;
 	program->control[address].If.flag = flag;
 	program->control[address].If.a_then = a_then;
 	program->control[address].If.a_else = a_else;
@@ -96,7 +96,7 @@ int program_set_goto(struct program *program, int address, int32_t a_goto)
 	assert(address >= 0 && address < N_INSTRUCTIONS);
 	assert(a_goto >= 0 && a_goto <= LABEL_NEXT);
 
-	program->control[address].type = KW_GOTO;
+	program->control[address].type = CT_GOTO;
 	program->control[address].Goto.a_goto = a_goto;
 	return 0;
 }
@@ -110,7 +110,7 @@ int program_set_input(struct program *program, int address, int value)
 	if (value < 0)
 		value &= 0xFFFF;
 
-	program->control[address].type = KW_INPUT;
+	program->control[address].type = CT_INPUT;
 	program->control[address].Input.value = value;
 	return 1;
 }

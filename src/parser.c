@@ -1058,31 +1058,31 @@ static int Operator(struct parser *parser)
 static int Conditional(struct parser *parser)
 {
 	int32_t flag = 0, label_then = LABEL_NEXT, label_else = LABEL_NEXT;
-	if (Match(parser, KW_C) || Match(parser, KW_CO3)) { flag = KW_CO3; }
-	else if (Match(parser, KW_CO2)) { flag = KW_CO2; }
-	else if (Match(parser, KW_CO1)) { flag = KW_CO1; }
-	else if (Match(parser, KW_CO0)) { flag = KW_CO0; }
-	else if (Match(parser, KW_XWR0)) { flag = KW_XWR0; }
-	else if (Match(parser, KW_XWR3)) { flag = KW_XWR3; }
-	else if (Match(parser, KW_A15)) { flag = KW_A15; }
-	else if (Match(parser, KW_B15)) { flag = KW_B15; }
-	else if (Match(parser, KW_SHL1)) { flag = KW_SHL1; }
-	else if (Match(parser, KW_SHL2)) { flag = KW_SHL2; }
-	else if (Match(parser, KW_SHR1)) { flag = KW_SHR1; }
-	else if (Match(parser, KW_SHR2)) { flag = KW_SHR2; }
+	if (Match(parser, KW_C) || Match(parser, KW_CO3)) { flag = CF_CO3; }
+	else if (Match(parser, KW_CO2)) { flag = CF_CO2; }
+	else if (Match(parser, KW_CO1)) { flag = CF_CO1; }
+	else if (Match(parser, KW_CO0)) { flag = CF_CO0; }
+	else if (Match(parser, KW_XWR0)) { flag = CF_XWR0; }
+	else if (Match(parser, KW_XWR3)) { flag = CF_XWR3; }
+	else if (Match(parser, KW_A15)) { flag = CF_A15; }
+	else if (Match(parser, KW_B15)) { flag = CF_B15; }
+	else if (Match(parser, KW_SHL1)) { flag = CF_SHL1; }
+	else if (Match(parser, KW_SHL2)) { flag = CF_SHL2; }
+	else if (Match(parser, KW_SHR1)) { flag = CF_SHR1; }
+	else if (Match(parser, KW_SHR2)) { flag = CF_SHR2; }
 	else if (Match(parser, '!')) {
-		if (Match(parser, KW_SHL1)) { flag = ~KW_SHL1; }
-		else if (Match(parser, KW_SHL2)) { flag = ~KW_SHL2; }
-		else if (Match(parser, KW_SHR1)) { flag = ~KW_SHR1; }
-		else if (Match(parser, KW_SHR2)) { flag = ~KW_SHR2; }
-		else if (Match(parser, KW_C) || Match(parser, KW_CO3)) { flag = ~KW_CO3; }
-		else if (Match(parser, KW_CO2)) { flag = ~KW_CO2; }
-		else if (Match(parser, KW_CO1)) { flag = ~KW_CO1; }
-		else if (Match(parser, KW_CO0)) { flag = ~KW_CO0; }
-		else if (Match(parser, KW_XWR0)) { flag = ~KW_XWR0; }
-		else if (Match(parser, KW_XWR3)) { flag = ~KW_XWR3; }
-		else if (Match(parser, KW_A15)) { flag = ~KW_A15; }
-		else if (Match(parser, KW_B15)) { flag = ~KW_B15; }
+		if (Match(parser, KW_SHL1)) { flag = CF_NOT_SHL1; }
+		else if (Match(parser, KW_SHL2)) { flag = CF_NOT_SHL2; }
+		else if (Match(parser, KW_SHR1)) { flag = CF_NOT_SHR1; }
+		else if (Match(parser, KW_SHR2)) { flag = CF_NOT_SHR2; }
+		else if (Match(parser, KW_C) || Match(parser, KW_CO3)) { flag = CF_NOT_CO3; }
+		else if (Match(parser, KW_CO2)) { flag = CF_NOT_CO2; }
+		else if (Match(parser, KW_CO1)) { flag = CF_NOT_CO1; }
+		else if (Match(parser, KW_CO0)) { flag = CF_NOT_CO0; }
+		else if (Match(parser, KW_XWR0)) { flag = CF_NOT_XWR0; }
+		else if (Match(parser, KW_XWR3)) { flag = CF_NOT_XWR3; }
+		else if (Match(parser, KW_A15)) { flag = CF_NOT_A15; }
+		else if (Match(parser, KW_B15)) { flag = CF_NOT_B15; }
 		else {
 			Consume(parser);
 			parser->error = X584ASM_FLAG_EXPECTED;

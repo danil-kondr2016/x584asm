@@ -22,6 +22,45 @@
 #define CARRY_VALUE_0    6
 #define CARRY_VALUE_1    7
 
+enum control_type {
+	CT_NONE,
+	CT_IF,
+	CT_GOTO,
+	CT_INPUT,
+};
+
+enum control_if_flags {
+	CF_NONE,
+	CF_CO3,
+	CF_CO2,
+	CF_CO1,
+	CF_CO0,
+	CF_NOT_SHL1,
+	CF_NOT_SHR1,
+	CF_NOT_SHL2,
+	CF_NOT_SHR2,
+	CF_XWR0,
+	CF_XWR3,
+	CF_A15,
+	CF_B15,
+
+	CF_MAX,
+
+	CF_NOT_FLAG = 32,
+	CF_NOT_CO3,
+	CF_NOT_CO2,
+	CF_NOT_CO1,
+	CF_NOT_CO0,
+	CF_SHL1,
+	CF_SHR1,
+	CF_SHL2,
+	CF_SHR2,
+	CF_NOT_XWR0,
+	CF_NOT_XWR3,
+	CF_NOT_A15,
+	CF_NOT_B15,
+};
+
 struct control {
 	int32_t type;
 	union {

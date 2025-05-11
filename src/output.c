@@ -1,7 +1,7 @@
 #include "program.h"
 #include "utils.h"
+#include "x584err.h"
 
-#include "lexer.h"
 #include "utf8proc.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -124,21 +124,21 @@ static int get_operator_str(struct program *program, int i, char *operator)
 
 	operator[0] = '\0';
 	switch (program->control[i].type) {
-	case KW_IF:
+	case CT_IF:
 		strcpy(operator, "если ");
 		switch (program->control[i].If.flag) {
-		case KW_CO3: strcat(operator, "ПАЛУ3 "); break;
-		case KW_CO2: strcat(operator, "ПАЛУ2 "); break;
-		case KW_CO1: strcat(operator, "ПАЛУ1 "); break;
-		case KW_CO0: strcat(operator, "ПАЛУ0 "); break;
-		case KW_XWR0: strcat(operator, "РРР0 "); break;
-		case KW_XWR3: strcat(operator, "РРР3 "); break;
-		case KW_A15: strcat(operator, "A15 "); break;
-		case KW_B15: strcat(operator, "B15 "); break;
-		case ~KW_SHL1: strcat(operator, "!СДЛ1 "); break;
-		case ~KW_SHL2: strcat(operator, "!СДЛ2 "); break;
-		case ~KW_SHR1: strcat(operator, "!СДП1 "); break;
-		case ~KW_SHR2: strcat(operator, "!СДП2 "); break;
+		case CF_CO3: strcat(operator, "ПАЛУ3 "); break;
+		case CF_CO2: strcat(operator, "ПАЛУ2 "); break;
+		case CF_CO1: strcat(operator, "ПАЛУ1 "); break;
+		case CF_CO0: strcat(operator, "ПАЛУ0 "); break;
+		case CF_XWR0: strcat(operator, "РРР0 "); break;
+		case CF_XWR3: strcat(operator, "РРР3 "); break;
+		case CF_A15: strcat(operator, "A15 "); break;
+		case CF_B15: strcat(operator, "B15 "); break;
+		case CF_NOT_SHL1: strcat(operator, "!СДЛ1 "); break;
+		case CF_NOT_SHL2: strcat(operator, "!СДЛ2 "); break;
+		case CF_NOT_SHR1: strcat(operator, "!СДП1 "); break;
+		case CF_NOT_SHR2: strcat(operator, "!СДП2 "); break;
 		default:
 			       return 0;
 		}
@@ -168,7 +168,7 @@ static int get_operator_str(struct program *program, int i, char *operator)
 			strcat(operator, buf);
 		}
 		return 1;
-	case KW_GOTO:
+	case CT_GOTO:
 		if (program->control[i].Goto.a_goto == LABEL_NEXT) {
 			val = i + 1;
 		}
@@ -180,7 +180,7 @@ static int get_operator_str(struct program *program, int i, char *operator)
 		}
 		sprintf(operator, "goto %d", val);
 		return 1;
-	case KW_INPUT:
+	case CT_INPUT:
 		sprintf(operator, "ввод %d", program->control[i].Input.value);
 		return 2;
 	default:
