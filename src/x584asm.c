@@ -35,6 +35,7 @@ void help()
 	puts("    -o | --output [outfile]  Set output file name"); 
 	puts("                             (by default it is "
 					   "derived from input name)");
+	puts("    -fenglish-only           Use only English keywords");
 }
 
 void version()
@@ -54,12 +55,15 @@ int u8main(int argc, char **argv)
 		{ "output", 'o', OPTPARSE_REQUIRED },
 		{ "help",   'h', OPTPARSE_NONE     },
 		{ "version",'v', OPTPARSE_NONE     },
+		{ NULL,     'f', OPTPARSE_REQUIRED },
 		{0}
 	};
 
 	char *input = NULL;
 	char *output = NULL;
 	int option;
+
+	bool english_only = false;
 
 	optparse_init(&opt, argv);
 	while ((option = optparse_long(&opt, long_options, NULL)) != -1) {
@@ -72,6 +76,11 @@ int u8main(int argc, char **argv)
 			return 0;
 		case 'o':
 			output = opt.optarg;
+			break;
+		case 'f':
+			if (strcmp(opt.optarg, "english-only") == 0) {
+				english_only = true;
+			}
 			break;
 		case '?':
 			fprintf(stderr, "! Fatal error: %s\n", opt.errmsg);
@@ -110,7 +119,7 @@ int u8main(int argc, char **argv)
 	if (!reader_open(&reader, input)) {
 		return 1;
 	}
-	lexer_init(&lexer, &reader);
+	lexer_init(&lexer, &reader, english_only);
 	parser_init(&parser, &lexer, &program);
 	if (parser_run(&parser)) {
 		bool ret = program_output(&program, output);

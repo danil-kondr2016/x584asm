@@ -1,7 +1,9 @@
 #ifndef _lexer_h_
 #define _lexer_h_
 
+#include <stdbool.h>
 #include <stdint.h>
+
 #include <sds.h>
 
 #include "reader.h"
@@ -50,10 +52,11 @@ struct lexer {
 	int keywords_count;
 	int input_line, input_col;
 	int line, col;
-	int newline;
+	bool newline : 1;
+	bool english_only : 1;
 };
 
-int lexer_init(struct lexer *lexer, struct reader *reader);
+int lexer_init(struct lexer *lexer, struct reader *reader, bool english_only);
 int lexer_register(struct lexer *lexer, char *word, int32_t value);
 int32_t lexer_next(struct lexer *lexer, sds *token);
 int lexer_free(struct lexer *lexer);
