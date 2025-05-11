@@ -126,9 +126,14 @@ static void Panic(struct parser *parser, int error)
 		Error(parser->line, parser->col, error);
 	if (parser->input == '=') // if Panic called in this position, it should be invalid
 		Consume(parser);
-
-	if (parser->input == INPUT_ERROR)
-		return;
+	if (error == X584ASM_UNEXPECTED_SYMBOL)
+		Consume(parser);
+	if (error == X584ASM_UNEXPECTED_WORD)
+		Consume(parser);
+	if (error == X584ASM_UNEXPECTED_NUMBER)
+		Consume(parser);
+	if (parser->input == KW_NOT_ENGLISH)
+		Consume(parser);
 
 	while (parser->input != RUNE_ASSIGN
 			&& parser->input != '=' // like ":="
@@ -138,7 +143,8 @@ static void Panic(struct parser *parser, int error)
 			&& parser->input != KW_HALT // Opcode
 			&& parser->input != KW_NOP // Opcode
 			&& parser->input != '<' // Should be <ПУСТО>
-			&& parser->input != INPUT_EOF)
+			&& parser->input != INPUT_EOF
+			&& parser->input != KW_NOT_ENGLISH)
 	{
 		Consume(parser);
 		if (parser->input == '(') {
@@ -313,6 +319,9 @@ static int Instruction(struct parser *parser)
 	else if (parser->input == '(') {
 		;//maybe (WR,XWR)
 	}
+	else if (parser->input == KW_NOT_ENGLISH) {
+		Panic(parser, X584ASM_NON_ENGLISH_KEYWORD);
+	}
 	else if (parser->input <= 0x10FFFF && parser->input != INPUT_EOF) {
 		Panic(parser, X584ASM_UNEXPECTED_SYMBOL);
 	}
@@ -472,6 +481,10 @@ static int Variable(struct parser *parser)
 	else if (Match(parser, KW_WR)) { result = VAR_WR; }
 	else if (Match(parser, KW_XWR)) { result = VAR_XWR; }
 	else if (Match(parser, KW_DOP)) { result = VAR_DOP; }
+	else if (parser->input == KW_NOT_ENGLISH) {
+		parser->error = X584ASM_NON_ENGLISH_KEYWORD;
+		parser->non_fail = true;
+	}
 	// else: token is already saved and ready to further processing
 	
 	parser->var = result;
@@ -526,6 +539,11 @@ static int Term(struct parser *parser)
 		Consume(parser);
 		result = REG_INVALID;
 	}
+	else if (parser->input == KW_NOT_ENGLISH) {
+		Fail(parser, X584ASM_NON_ENGLISH_KEYWORD);	
+		Consume(parser);
+		result = REG_INVALID;
+	}
 
 	return result;
 }
@@ -553,7 +571,10 @@ static int XAssign(struct parser *parser)
 		return 0; 
 	}
 	if (!Match(parser, KW_WR)) {
-		parser->error = X584ASM_SYNTAX_ERROR;
+		if (parser->input != KW_NOT_ENGLISH)
+			parser->error = X584ASM_SYNTAX_ERROR;
+		else
+			parser->error = X584ASM_NON_ENGLISH_KEYWORD;
 		parser->non_fail = true;
 		return 0;
 	}
@@ -563,7 +584,10 @@ static int XAssign(struct parser *parser)
 		return 0;
 	}
 	if (!Match(parser, KW_XWR)) {
-		parser->error = X584ASM_SYNTAX_ERROR;
+		if (parser->input != KW_NOT_ENGLISH)
+			parser->error = X584ASM_SYNTAX_ERROR;
+		else
+			parser->error = X584ASM_NON_ENGLISH_KEYWORD;
 		parser->non_fail = true;
 		return 0;
 	}
@@ -605,7 +629,10 @@ static int XAssign(struct parser *parser)
 		return 0;
 	}
 	if (!Match(parser, KW_XWR)) {
-		parser->error = X584ASM_SYNTAX_ERROR;
+		if (parser->input != KW_NOT_ENGLISH)
+			parser->error = X584ASM_SYNTAX_ERROR;
+		else
+			parser->error = X584ASM_NON_ENGLISH_KEYWORD;
 		parser->non_fail = true;
 		return 0;
 	}
@@ -844,7 +871,10 @@ static int NXorExpr(struct parser *parser)
 	}
 	else {
 		parser->non_fail = true;
-		parser->error = X584ASM_XOR_EXPECTED;
+		if (parser->input == KW_NOT_ENGLISH)
+			parser->error = X584ASM_NON_ENGLISH_KEYWORD;
+		else
+			parser->error = X584ASM_XOR_EXPECTED;
 		return 0;
 	}
 
@@ -875,6 +905,11 @@ static int ShiftOp(struct parser *parser)
 	else if (Match(parser, KW_SAR)) { shift_op = OP_SAR; }
 	else if (Match(parser, KW_ROL)) { shift_op = OP_ROL; }
 	else if (Match(parser, KW_ROR)) { shift_op = OP_ROR; }
+	else if (parser->input == KW_NOT_ENGLISH) {
+		parser->error = X584ASM_NON_ENGLISH_KEYWORD;
+		parser->non_fail = true;
+		return 0;
+	}
 
 	return shift_op;
 }
@@ -934,6 +969,11 @@ static int Carry(struct parser *parser)
 	if (!Match(parser, '('))
 		return 0;
 	if (!Match(parser, KW_C)) {
+		if (parser->input == KW_NOT_ENGLISH) {
+			parser->error = X584ASM_NON_ENGLISH_KEYWORD;
+			parser->non_fail = true;
+			return 0;
+		}
 		Back(parser); // restore '('
 		return 0;
 	}
@@ -1059,6 +1099,11 @@ static int Operator(struct parser *parser)
 	else if (Match(parser, KW_INPUT)) {
 		return Input(parser);
 	}
+	else if (parser->input == KW_NOT_ENGLISH) {
+		parser->error = X584ASM_NON_ENGLISH_KEYWORD;
+		parser->non_fail = true;
+		return 0;
+	}
 	return 0;
 }
 
@@ -1092,19 +1137,28 @@ static int Conditional(struct parser *parser)
 		else if (Match(parser, KW_B15)) { flag = CF_NOT_B15; }
 		else {
 			Consume(parser);
-			parser->error = X584ASM_FLAG_EXPECTED;
+			if (parser->input != KW_NOT_ENGLISH)
+				parser->error = X584ASM_FLAG_EXPECTED;
+			else
+				parser->error = X584ASM_NON_ENGLISH_KEYWORD;
 			parser->non_fail = true;
 			return 0;
 		}
 	}
 	else {
 		Consume(parser);
-		parser->error = X584ASM_FLAG_EXPECTED;
+		if (parser->input != KW_NOT_ENGLISH)
+			parser->error = X584ASM_FLAG_EXPECTED;
+		else
+			parser->error = X584ASM_NON_ENGLISH_KEYWORD;
 		parser->non_fail = true;
 		return 0;
 	}
 	if (!Match(parser, KW_THEN)) {
-		parser->error = X584ASM_THEN_EXPECTED;
+		if (parser->input != KW_NOT_ENGLISH)
+			parser->error = X584ASM_THEN_EXPECTED;
+		else
+			parser->error = X584ASM_NON_ENGLISH_KEYWORD;
 		parser->non_fail = true;
 		return 0;
 	}

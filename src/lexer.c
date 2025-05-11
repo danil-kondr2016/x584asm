@@ -529,12 +529,6 @@ static int32_t _word(struct lexer *lexer, sds *token)
 	}
 
 	free(norm_token);
-
-	if (result == KW_NOT_ENGLISH) {
-		return Error(lexer->line, lexer->col, 
-				X584ASM_NON_ENGLISH_KEYWORD);
-	}
-
 	return result;
 }
 
