@@ -181,7 +181,43 @@ static int get_operator_str(struct program *program, int i, char *operator)
 		sprintf(operator, "goto %d", val);
 		return 1;
 	case CT_INPUT:
-		sprintf(operator, "ввод %d", program->control[i].Input.value);
+		switch (program->control[i].Input.format) {
+		case CI_UNSIGNED:
+			sprintf(operator, "ввод %hu", program->control[i].Input.value);
+			break;
+		case CI_SIGNED:
+			sprintf(operator, "ввод %hd", program->control[i].Input.value);
+			break;
+		case CI_HEX:
+			sprintf(operator, "ввод 0x%04hX", program->control[i].Input.value);
+			break;
+		case CI_BINARY:
+		case CI_GROUPED_BINARY:
+			{
+				char *p;
+
+				if (program->control[i].Input.format == CI_BINARY)
+					sprintf(operator, "ввод 0000000000000000");
+				else
+					sprintf(operator, "ввод 0000 0000 0000 0000");
+
+				p = strchr(operator, '0');
+				val = program->control[i].Input.value;
+				for (int i = 0; i < 16; i++) {
+					int mask = 1 << (15 - i);
+					if (val & mask)
+						*p = '1';
+					p++;
+					if (!*p)
+						break;
+					if (*p && *p != '0')
+						p++;
+				}
+			}
+			break;
+		default:
+			return 0;
+		}
 		return 2;
 	default:
 		return 0;

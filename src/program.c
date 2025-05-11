@@ -101,7 +101,7 @@ int program_set_goto(struct program *program, int address, int32_t a_goto)
 	return 0;
 }
 
-int program_set_input(struct program *program, int address, int value)
+int program_set_input(struct program *program, int address, enum control_input_format format, int value)
 {
 	assert(program);
 	assert(address >= 0 && address < N_INSTRUCTIONS);
@@ -111,6 +111,7 @@ int program_set_input(struct program *program, int address, int value)
 		value &= 0xFFFF;
 
 	program->control[address].type = CT_INPUT;
+	program->control[address].Input.format = format;
 	program->control[address].Input.value = value;
 	return 1;
 }

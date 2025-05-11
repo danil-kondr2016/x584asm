@@ -1139,6 +1139,8 @@ static int Input(struct parser *parser)
 	int32_t bin_vals[16] = {0,1,10,11,100,101,110,111,1000,1001,1010,1011,
 		1100,1101,1110,1111};
 	int32_t input_num = 0;
+	enum control_input_format format = CI_NONE;
+
 	if (parser->input == RUNE_NUMBER) {
 		if (sdslen(parser->token) == 16) {
 			if (!IsValidBinary(parser->token)) {
@@ -1155,6 +1157,7 @@ static int Input(struct parser *parser)
 			}
 			input_num = val; // by definition val <= 65535 and val > 0
 			Consume(parser);
+			format = CI_BINARY;	
 		}
 		else if (sdslen(parser->token) == 4) {
 			long vals[4], n = 0;
@@ -1191,10 +1194,12 @@ static int Input(struct parser *parser)
 				// Number is like binary one.
 				input_num = bin_vals[vals[0]];
 				// Number is in range of 0 to 9999.
+				format = CI_UNSIGNED;
 			}
 			else if (n == 4) {
 				// Number is written out of four four-digit binary numbers.
 				input_num = (vals[0]<<12)|(vals[1]<<8)|(vals[2]<<4)|(vals[3]);
+				format = CI_GROUPED_BINARY;
 			}
 			else {
 				// n == 2 || n == 3. Error
@@ -1210,6 +1215,7 @@ static int Input(struct parser *parser)
 				parser->non_fail = true;
 				return 0;
 			}
+			format = CI_UNSIGNED;
 			Consume(parser);
 		}
 	}
@@ -1220,6 +1226,7 @@ static int Input(struct parser *parser)
 			parser->non_fail = true;
 			return 0;
 		}
+		format = CI_HEX;
 		Consume(parser);
 	}
 	else if (Match(parser, '-')) {
@@ -1232,10 +1239,11 @@ static int Input(struct parser *parser)
 			}
 			input_num = -input_num;
 			input_num &= 0xFFFF;
+			format = CI_SIGNED;
 			Consume(parser);
 		}
 	}
-	program_set_input(parser->program, parser->address, input_num);
+	program_set_input(parser->program, parser->address, format, input_num);
 	
 	return 1;
 }

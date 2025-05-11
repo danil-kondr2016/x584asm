@@ -61,19 +61,29 @@ enum control_if_flags {
 	CF_NOT_B15,
 };
 
+enum control_input_format {
+	CI_NONE,
+	CI_UNSIGNED,
+	CI_SIGNED,
+	CI_HEX,
+	CI_BINARY,
+	CI_GROUPED_BINARY,
+};
+
 struct control {
-	int32_t type;
+	int16_t type;
 	union {
 		struct {
-			int32_t flag;
-			int32_t a_then;
-			int32_t a_else;
+			int16_t flag;
+			int16_t a_then;
+			int16_t a_else;
 		} If;
 		struct {
-			int32_t a_goto;
+			int16_t a_goto;
 		} Goto;
 		struct {
-			int32_t value;
+			int16_t format;
+			uint16_t value;
 		} Input;
 	};
 };
@@ -90,7 +100,7 @@ int program_set_label(struct program *program, int label, int address);
 int program_set_opcode(struct program *program, int address, int opcode, int brk, int carry);
 int program_set_if(struct program *program, int address, int32_t flag, int32_t a_then, int32_t a_else);
 int program_set_goto(struct program *program, int address, int32_t a_goto);
-int program_set_input(struct program *program, int address, int value);
+int program_set_input(struct program *program, int address, enum control_input_format format, int value);
 int program_set_annotation(struct program *program, int address, char *annotation);
 int program_move_annotation(struct program *program, int address, sds *p_annotation);
 int program_output(struct program *program, char *u8path);
