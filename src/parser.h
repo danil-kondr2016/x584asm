@@ -137,9 +137,11 @@ struct parser {
 	bool invalid_instruction : 1;
 	bool is_program_valid    : 1;
 	bool panic               : 1;
+	bool negative_flags      : 1;
 };
 
-bool parser_init(struct parser *parser, struct lexer *lexer, struct program *program);
+bool parser_init(struct parser *parser, struct lexer *lexer, 
+		struct program *program, bool negative_flags);
 bool parser_run(struct parser *parser);
 
 #endif

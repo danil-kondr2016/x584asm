@@ -1,9 +1,9 @@
 	NOP
-	если !П то first
+	если П то first
 	NOP
 first:
 	HALT
-	если !П то second
+	если П то second
 	NOP
 second:
 	HALT

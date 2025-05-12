@@ -36,6 +36,8 @@ void help()
 	puts("                             (by default it is "
 					   "derived from input name)");
 	puts("    -fenglish-only           Use only English keywords");
+	puts("    -fnegative-flags         Enable negative flags like "
+	                                   "!C or WRRT");
 }
 
 void version()
@@ -64,6 +66,7 @@ int u8main(int argc, char **argv)
 	int option;
 
 	bool english_only = false;
+	bool negative_flags = false;
 
 	optparse_init(&opt, argv);
 	while ((option = optparse_long(&opt, long_options, NULL)) != -1) {
@@ -80,6 +83,9 @@ int u8main(int argc, char **argv)
 		case 'f':
 			if (strcmp(opt.optarg, "english-only") == 0) {
 				english_only = true;
+			}
+			else if (strcmp(opt.optarg, "negative-flags") == 0) {
+				negative_flags = true;
 			}
 			break;
 		case '?':
@@ -120,7 +126,7 @@ int u8main(int argc, char **argv)
 		return 1;
 	}
 	lexer_init(&lexer, &reader, english_only);
-	parser_init(&parser, &lexer, &program);
+	parser_init(&parser, &lexer, &program, negative_flags);
 	if (parser_run(&parser)) {
 		bool ret = program_output(&program, output);
 
