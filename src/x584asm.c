@@ -35,7 +35,6 @@ void help()
 	puts("    -o | --output [outfile]  Set output file name"); 
 	puts("                             (by default it is "
 					   "derived from input name)");
-	puts("    -fenglish-only           Use only English keywords");
 	puts("    -fnegative-flags         Enable negative flags like "
 	                                   "!C or WRRT");
 }
@@ -65,7 +64,6 @@ int u8main(int argc, char **argv)
 	char *output = NULL;
 	int option;
 
-	bool english_only = false;
 	bool negative_flags = false;
 
 	optparse_init(&opt, argv);
@@ -81,10 +79,7 @@ int u8main(int argc, char **argv)
 			output = opt.optarg;
 			break;
 		case 'f':
-			if (strcmp(opt.optarg, "english-only") == 0) {
-				english_only = true;
-			}
-			else if (strcmp(opt.optarg, "negative-flags") == 0) {
+			if (strcmp(opt.optarg, "negative-flags") == 0) {
 				negative_flags = true;
 			}
 			break;

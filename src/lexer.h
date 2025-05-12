@@ -38,7 +38,6 @@ enum keyword_type {
 	KW_BREAK, KW_HALT,
 	KW_ALUCIN,
 	KW_EMPTY,
-	KW_NOT_ENGLISH,
 };
 
 struct keyword {
@@ -54,10 +53,9 @@ struct lexer {
 	int input_line, input_col;
 	int line, col;
 	bool newline : 1;
-	bool english_only : 1;
 };
 
-int lexer_init(struct lexer *lexer, struct reader *reader, bool english_only);
+int lexer_init(struct lexer *lexer, struct reader *reader);
 int lexer_register(struct lexer *lexer, char *word, int32_t value);
 int32_t lexer_next(struct lexer *lexer, sds *token);
 int lexer_free(struct lexer *lexer);

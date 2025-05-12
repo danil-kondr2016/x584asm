@@ -24,7 +24,6 @@ static const char *_errors[] = {
 	[X584ASM_UNEXPECTED_WORD] = "Unexpected word",
 	[X584ASM_UNEXPECTED_SYMBOL] = "Unexpected symbol",
 	[X584ASM_UNEXPECTED_ANNOTATION] = "Unexpected annotation",
-	[X584ASM_NON_ENGLISH_KEYWORD] = "Non-English keyword",
 };
 
 static const char *_fatals[] = {
