@@ -120,7 +120,7 @@ int u8main(int argc, char **argv)
 	if (!reader_open(&reader, input)) {
 		return 1;
 	}
-	lexer_init(&lexer, &reader, english_only);
+	lexer_init(&lexer, &reader);
 	parser_init(&parser, &lexer, &program, negative_flags);
 	if (parser_run(&parser)) {
 		bool ret = program_output(&program, output);
