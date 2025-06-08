@@ -1069,7 +1069,7 @@ static int Conditional(struct parser *parser)
 {
 	int32_t flag = 0, label_then = LABEL_NEXT, label_else = LABEL_NEXT;
 	if (Match(parser, KW_C)) { flag = CF_CO3; }
-	if (Match(parser, KW_CO3)) { flag = CF_CO3; }
+	else if (Match(parser, KW_CO3)) { flag = CF_CO3; }
 	else if (Match(parser, KW_CO2)) { flag = CF_CO2; }
 	else if (Match(parser, KW_CO1)) { flag = CF_CO1; }
 	else if (Match(parser, KW_CO0)) { flag = CF_CO0; }
