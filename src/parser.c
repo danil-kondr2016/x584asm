@@ -992,8 +992,9 @@ static int RegisterLabel(struct parser *parser)
 	}
 	else {
 		int label = parser->n_labels;
-		lexer_register(parser->lexer, parser->token,
-				RUNE_LABEL(label));
+		lexer_mark_and_register(parser->lexer, parser->token,
+				RUNE_LABEL(label), parser->line,
+				parser->col);
 		parser->n_labels++;
 		return label + LABEL_FIRST;
 	}
@@ -1394,5 +1395,23 @@ bool parser_init(struct parser *parser, struct lexer *lexer,
 bool parser_run(struct parser *parser)
 {
 	while (parser->input != INPUT_EOF && Instruction(parser));
+	for (int i = 0; i < parser->n_labels; i++) {
+		int32_t rune_label = RUNE_LABEL(i);
+		int line, col;
+
+		if (parser->program->label[i] == LABEL_INVALID) {
+			int ret = lexer_get_pos_of_first_occurrence(
+				parser->lexer,
+				rune_label,
+				&line, &col);
+			if (!ret)
+				continue;
+
+			parser->line = line;
+			parser->col = col;
+			Fail(parser, X584ASM_UNDEFINED_LABEL);
+		}
+	}
+
 	return parser->is_program_valid;
 }

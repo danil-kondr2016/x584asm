@@ -43,6 +43,8 @@ enum keyword_type {
 struct keyword {
 	char *word;
 	int32_t value;
+	int line;
+	int col;
 };
 
 struct lexer {
@@ -57,6 +59,10 @@ struct lexer {
 
 int lexer_init(struct lexer *lexer, struct reader *reader);
 int lexer_register(struct lexer *lexer, char *word, int32_t value);
+int lexer_mark_and_register(struct lexer *lexer, char *word, int32_t value,
+		int line, int col);
+int lexer_get_pos_of_first_occurrence(struct lexer *lexer, int32_t value, 
+		int *pLine, int *pCol);
 int32_t lexer_next(struct lexer *lexer, sds *token);
 int lexer_free(struct lexer *lexer);
 

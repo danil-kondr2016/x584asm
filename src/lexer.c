@@ -192,6 +192,25 @@ int lexer_register(struct lexer *lexer, char *word, int32_t value)
 	return lexer->keywords_count++;
 }
 
+int lexer_mark_and_register(struct lexer *lexer, char *word, int32_t value,
+		int line, int col)
+{
+	if (!lexer)
+		return -1;
+	if (!word)
+		return -1;
+	if (lexer->keywords_count >= N_KEYWORDS)
+		return -1;
+
+	int id = lexer_register(lexer, word, value);
+	lexer->keywords[id].line = (line != -1) ? line : lexer->line;
+	lexer->keywords[id].col = (col != -1) ? col : lexer->col;
+
+	return id;
+}
+
+
+
 static void _skip_multiline_comment(struct lexer *lexer);
 static void _skip_singleline_comment(struct lexer *lexer);
 
@@ -548,6 +567,27 @@ int lexer_free(struct lexer *lexer)
 		free(lexer->keywords[i].word);
 	}
 	memset(lexer, 0, sizeof(struct lexer));
+
+	return 1;
+}
+
+int lexer_get_pos_of_first_occurrence(struct lexer *lexer, int32_t value, 
+		int *pLine, int *pCol)
+{
+	if (!lexer)
+		return 0;
+
+	int id;
+	for (id = 0; id < lexer->keywords_count; id++) {
+		if (lexer->keywords[id].value == value)
+			break;
+	}
+
+	if (id >= lexer->keywords_count)
+		return 0;
+
+	if (pLine) *pLine = lexer->keywords[id].line;
+	if (pCol) *pCol = lexer->keywords[id].col;
 
 	return 1;
 }
