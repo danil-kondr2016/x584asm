@@ -65,42 +65,42 @@ struct opcode_data {
 	{ARG(ADD_0),  VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0000|(_x)},\
 	{ARG(ADD_N0), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0000|(_x)},\
 	\
-	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0040|(_x)},\
-	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0040|(_x)},\
-	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0040|(_x)},\
-	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0040|(_x)},\
-	{ARG(ADD_##_b)|ARG(SUB_##_a), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0040|(_x)},\
+	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0040|(_x)},\
+	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0040|(_x)},\
+	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0040|(_x)},\
+	{ARG(ADD_##_b)|ARG(SUB_##_a)|ARG(SUB_1), VAR_##_var, ALU_REG(_a), REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0040|(_x)},\
+	{ARG(ADD_##_b)|ARG(SUB_##_a), VAR_##_var, ALU_REG(_a), REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0040|(_x)},\
 	\
-	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0100|(_x)},\
-	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0100|(_x)},\
-	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0100|(_x)},\
-	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0100|(_x)},\
-	{ARG(ADD_##_a)|ARG(SUB_##_b), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0100|(_x)},\
+	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0100|(_x)},\
+	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0100|(_x)},\
+	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0100|(_x)},\
+	{ARG(ADD_##_a)|ARG(SUB_##_b)|ARG(SUB_1), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0100|(_x)},\
+	{ARG(ADD_##_a)|ARG(SUB_##_b), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0100|(_x)},\
 	\
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0140|(_x)},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0140|(_x)},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0140|(_x)},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0140|(_x)},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0140|(_x)},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0140|(_x)},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0140|(_x)},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0140|(_x)},\
 	\
-	{ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0200|(_x)},\
-	{ARG(ADD_##_b)|ARG(ADD_0), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0200|(_x)},\
-	{ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0200|(_x)},\
-	{ARG(ADD_##_b), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0200|(_x)},\
+	{ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0200|(_x)},\
+	{ARG(ADD_##_b)|ARG(ADD_0), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0200|(_x)},\
+	{ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0200|(_x)},\
+	{ARG(ADD_##_b), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0200|(_x)},\
 	\
-	{ARG(ADD_N##_b)|ARG(ADD_C), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0240|(_x)},\
-	{ARG(ADD_N##_b)|ARG(ADD_0), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0240|(_x)},\
-	{ARG(ADD_N##_b)|ARG(ADD_1), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0240|(_x)},\
-	{ARG(ADD_N##_b), VAR_##_var, 0, 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0240|(_x)},\
+	{ARG(ADD_N##_b)|ARG(ADD_C), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0240|(_x)},\
+	{ARG(ADD_N##_b)|ARG(ADD_0), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0240|(_x)},\
+	{ARG(ADD_N##_b)|ARG(ADD_1), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0240|(_x)},\
+	{ARG(ADD_N##_b), VAR_##_var, 0, REG_##_b, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0240|(_x)},\
 	\
-	{ARG(ADD_##_a)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0300|(_x)},\
-	{ARG(ADD_##_a)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0300|(_x)},\
-	{ARG(ADD_##_a)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0300|(_x)},\
-	{ARG(ADD_##_a), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0300|(_x)},\
+	{ARG(ADD_##_a)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0300|(_x)},\
+	{ARG(ADD_##_a)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0300|(_x)},\
+	{ARG(ADD_##_a)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0300|(_x)},\
+	{ARG(ADD_##_a), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0300|(_x)},\
 	\
-	{ARG(ADD_N##_a)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0340|(_x)},\
-	{ARG(ADD_N##_a)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0340|(_x)},\
-	{ARG(ADD_N##_a)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0340|(_x)},\
-	{ARG(ADD_N##_a), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0340|(_x)},\
+	{ARG(ADD_N##_a)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, 0340|(_x)},\
+	{ARG(ADD_N##_a)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0340|(_x)},\
+	{ARG(ADD_N##_a)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, 0340|(_x)},\
+	{ARG(ADD_N##_a), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, 0340|(_x)},\
 	\
 	{0, VAR_##_var, 0, REG_##_a, REG_##_b, OP_AND, CARRY_UNUSED, 0400|(_x)},\
 	{0, VAR_##_var, 0, REG_##_b, REG_##_a, OP_AND, CARRY_UNUSED, 0400|(_x)},\
@@ -127,44 +127,44 @@ struct opcode_data {
 	{0, VAR_##_var, 0, REG_##_b, REG_##_a, OP_OR, CARRY_UNUSED, 0740|(_x)}
 
 #define SUM2(_var, _a, _b, _op) \
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, _op},\
-	{ARG(ADD_##_a)|ARG(ADD_##_b), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op}
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_##_b), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op}
 
 #define SUM1(_var, _a, _op) \
-	{ARG(ADD_##_a)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op},\
-	{ARG(ADD_##_a)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op},\
-	{ARG(ADD_##_a)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, _op},\
-	{ARG(ADD_##_a), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op}
+	{ARG(ADD_##_a)|ARG(ADD_C), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_INDEFINITE, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_0), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op},\
+	{ARG(ADD_##_a)|ARG(ADD_1), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_1, _op},\
+	{ARG(ADD_##_a), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_VALUE_0, _op}
 
 #define SET(_var, _a, _op) \
-	{ARG(ADD_##_a), VAR_##_var, ALU_REG(_a), 0, 0, OP_ADD_SUB_NEG, CARRY_UNUSED, _op}
+	{ARG(ADD_##_a), VAR_##_var, ALU_REG(_a), REG_##_a, 0, OP_ADD_SUB_NEG, CARRY_UNUSED, _op}
 
 #define SHIFT(_op, _opcode) \
-	{ARG(ADD_WR) | ARG(ADD_C), VAR_WR, 0, 0, 0, OP_##_op, CARRY_INDEFINITE, _opcode},\
-	{ARG(ADD_WR) | ARG(ADD_0), VAR_WR, 0, 0, 0, OP_##_op, CARRY_VALUE_0, _opcode},\
-	{ARG(ADD_WR) | ARG(ADD_1), VAR_WR, 0, 0, 0, OP_##_op, CARRY_VALUE_1, _opcode},\
-	{ARG(ADD_WR), VAR_WR, 0, 0, 0, OP_##_op, CARRY_VALUE_0, _opcode}
+	{ARG(ADD_WR) | ARG(ADD_C), VAR_WR, 0, REG_WR, 0, OP_##_op, CARRY_INDEFINITE, _opcode},\
+	{ARG(ADD_WR) | ARG(ADD_0), VAR_WR, 0, REG_WR, 0, OP_##_op, CARRY_VALUE_0, _opcode},\
+	{ARG(ADD_WR) | ARG(ADD_1), VAR_WR, 0, REG_WR, 0, OP_##_op, CARRY_VALUE_1, _opcode},\
+	{ARG(ADD_WR), VAR_WR, 0, REG_WR, 0, OP_##_op, CARRY_VALUE_0, _opcode}
 
 #define SHIFT1_X(_op, _opcode) \
-	{ARG(ADD_WR) | ARG(ADD_C), VAR_WR_XWR, 0, 0, 0, OP_##_op##_X, CARRY_INDEFINITE, _opcode},\
-	{ARG(ADD_WR) | ARG(ADD_0), VAR_WR_XWR, 0, 0, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
-	{ARG(ADD_WR) | ARG(ADD_1), VAR_WR_XWR, 0, 0, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode},\
-	{ARG(ADD_WR), VAR_WR_XWR, 0, 0, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode}
+	{ARG(ADD_WR) | ARG(ADD_C), VAR_WR_XWR, 0, REG_WR, 0, OP_##_op##_X, CARRY_INDEFINITE, _opcode},\
+	{ARG(ADD_WR) | ARG(ADD_0), VAR_WR_XWR, 0, REG_WR, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
+	{ARG(ADD_WR) | ARG(ADD_1), VAR_WR_XWR, 0, REG_WR, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode},\
+	{ARG(ADD_WR), VAR_WR_XWR, 0, REG_WR, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode}
 
-#define SHIFT_ARG_X(_arg, _reg, _op, _opcode) \
-	{(_arg) | ARG(ADD_C), VAR_WR_XWR, REG_##_reg, 0, 0, OP_##_op##_X, CARRY_INDEFINITE, _opcode},\
-	{(_arg) | ARG(ADD_0), VAR_WR_XWR, REG_##_reg, 0, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
-	{(_arg) | ARG(ADD_1), VAR_WR_XWR, REG_##_reg, 0, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode},\
-	{(_arg), VAR_WR_XWR, REG_##_reg, 0, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode}
+#define SHIFT_ARG_X(_arg, _reg, _arg1, _op, _opcode) \
+	{(_arg) | ARG(ADD_C), VAR_WR_XWR, REG_##_reg, _arg1, 0, OP_##_op##_X, CARRY_INDEFINITE, _opcode},\
+	{(_arg) | ARG(ADD_0), VAR_WR_XWR, REG_##_reg, _arg1, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
+	{(_arg) | ARG(ADD_1), VAR_WR_XWR, REG_##_reg, _arg1, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode},\
+	{(_arg), VAR_WR_XWR, REG_##_reg, _arg1, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode}
 
 #define SHIFT_ARG_SUB_X(_a, _r, _op, _opcode) \
-	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_C), VAR_WR_XWR, REG_##_r, 0, 0, OP_##_op##_X, CARRY_INDEFINITE, _opcode},\
-	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_0), VAR_WR_XWR, REG_##_r, 0, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
-	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_1), VAR_WR_XWR, REG_##_r, 0, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode},\
-	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1), VAR_WR_XWR, REG_##_r, 0, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
-	{ARG(ADD_WR)|ARG(SUB_##_a), VAR_WR_XWR, REG_##_r, 0, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode}
+	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_C), VAR_WR_XWR, REG_##_r, REG_WR, 0, OP_##_op##_X, CARRY_INDEFINITE, _opcode},\
+	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_0), VAR_WR_XWR, REG_##_r, REG_WR, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
+	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1)|ARG(ADD_1), VAR_WR_XWR, REG_##_r, REG_WR, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode},\
+	{ARG(ADD_WR)|ARG(SUB_##_a)|ARG(SUB_1), VAR_WR_XWR, REG_##_r, REG_WR, 0, OP_##_op##_X, CARRY_VALUE_0, _opcode},\
+	{ARG(ADD_WR)|ARG(SUB_##_a), VAR_WR_XWR, REG_##_r, REG_WR, 0, OP_##_op##_X, CARRY_VALUE_1, _opcode}
 
 #define OPCODE_WR_m_DIP_m_1_ROL 0432
 #define OPCODE_WR_p_DIP_ROL     0472
@@ -178,7 +178,7 @@ struct opcode_data {
 
 #define SHIFT2_X(_op) \
 	SHIFT_ARG_SUB_X(DIP, NONE, _op, OPCODE_WR_m_DIP_m_1_##_op),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_DIP), NONE, _op, OPCODE_WR_p_DIP_##_op),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_DIP), NONE, REG_WR, _op, OPCODE_WR_p_DIP_##_op),\
 	\
 	SHIFT_ARG_SUB_X(R0, R0, _op, OPCODE_WR_m_RF_m_1_##_op|0),\
 	SHIFT_ARG_SUB_X(R1, R1, _op, OPCODE_WR_m_RF_m_1_##_op|1),\
@@ -189,14 +189,14 @@ struct opcode_data {
 	SHIFT_ARG_SUB_X(R6, R6, _op, OPCODE_WR_m_RF_m_1_##_op|6),\
 	SHIFT_ARG_SUB_X(R7, R7, _op, OPCODE_WR_m_RF_m_1_##_op|7),\
 	\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R0, _op, OPCODE_WR_p_RF_##_op|0),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R1, _op, OPCODE_WR_p_RF_##_op|1),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R2, _op, OPCODE_WR_p_RF_##_op|2),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R3, _op, OPCODE_WR_p_RF_##_op|3),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R4, _op, OPCODE_WR_p_RF_##_op|4),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R5, _op, OPCODE_WR_p_RF_##_op|5),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R6, _op, OPCODE_WR_p_RF_##_op|6),\
-	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R7, _op, OPCODE_WR_p_RF_##_op|7)
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R0, REG_WR, _op, OPCODE_WR_p_RF_##_op|0),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R1, REG_WR, _op, OPCODE_WR_p_RF_##_op|1),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R2, REG_WR, _op, OPCODE_WR_p_RF_##_op|2),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R3, REG_WR, _op, OPCODE_WR_p_RF_##_op|3),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R4, REG_WR, _op, OPCODE_WR_p_RF_##_op|4),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R5, REG_WR, _op, OPCODE_WR_p_RF_##_op|5),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R6, REG_WR, _op, OPCODE_WR_p_RF_##_op|6),\
+	SHIFT_ARG_X(ARG(ADD_WR)|ARG(ADD_REG), R7, REG_WR, _op, OPCODE_WR_p_RF_##_op|7)
 
 
 static const struct opcode_data _opcodes[] = {

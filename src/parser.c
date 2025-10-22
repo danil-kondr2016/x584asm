@@ -450,6 +450,9 @@ static int AddRegister(struct parser *parser, uint8_t id, int sub)
 		parser->error = X584ASM_INVALID_OPCODE;
 	}
 	else {
+		if (!sub && id && !parser->arg1)
+			parser->arg1 = id;
+
 		if (id != REG_WR && id != REG_XWR && id != REG_DIP && id)
 			parser->reg = id;
 		if (carry)
